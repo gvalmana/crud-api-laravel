@@ -61,7 +61,7 @@ class RestController extends BaseController
         $specific = isset($params["_specific"]) ? $params["_specific"] : false;
         $response = $this->service->validate_all($params, $scenario, $specific);
         if (!$response['success']) {
-            return response($response, Response::HTTP_ACCEPTED);
+            return response($response, Response::HTTP_UNPROCESSABLE_ENTITY);
         }
         return response($response, Response::HTTP_OK);
     }
