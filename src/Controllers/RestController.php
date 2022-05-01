@@ -72,8 +72,11 @@ class RestController extends BaseController
         try {
             $params = $request->all();
             $result = $this->service->create($params);
-            if ($result['success'])
+            if ($result['success']){
                 DB::commit();
+            } else {
+                return response($result, Response::HTTP_UNPROCESSABLE_ENTITY);
+            }
         } catch (\Throwable $e) {
             DB::rollBack();
             throw $e;
