@@ -61,7 +61,7 @@ class RestController extends BaseController
         $specific = isset($params["_specific"]) ? $params["_specific"] : false;
         $response = $this->service->validate_all($params, $scenario, $specific);
         if (!$response['success']) {
-            return response($response, Response::HTTP_ACCEPTED);
+            return response($response, Response::HTTP_UNPROCESSABLE_ENTITY);
         }
         return response($response, Response::HTTP_OK);
     }
@@ -72,8 +72,11 @@ class RestController extends BaseController
         try {
             $params = $request->all();
             $result = $this->service->create($params);
-            if ($result['success'])
+            if ($result['success']){
                 DB::commit();
+            } else {
+                return response($result, Response::HTTP_UNPROCESSABLE_ENTITY);
+            }
         } catch (\Throwable $e) {
             DB::rollBack();
             throw $e;
