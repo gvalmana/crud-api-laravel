@@ -19,7 +19,8 @@
             "CrudApiRestfull\\Controllers\\": "src/Controllers",
             "CrudApiRestfull\\Models\\": "src/Models",
             "CrudApiRestfull\\Services\\": "src/Services",
-            "CridApiRestfull\\Test\\": "src/Test"
+            "CrudApiRestfull\\Test\\": "src/Test",
+            "CrudApiRestfull\\Middleware\\": "src/Middleware"
         }
     }    
 }
