@@ -335,6 +335,27 @@ class Services
             $result['success'] = false;
         return $result;
     }
+
+    public function select2_list($params)
+    {
+        $query = $this->modelClass->query();
+        $result = [];
+        if (isset($params["attr"])) {
+            $query->av = $this->eq_attr($query, $params['attr']);
+        }
+        if (isset($params['orderby'])) {
+            $query = $this->order_by($query, $params['orderby']);
+        }
+        if (isset($params['oper'])) {
+            $query = $this->oper($query, $params['oper']);
+        }
+        $data = $query->get();
+        foreach ($data as $key => $value) {
+            $result[$key]['option'] = $value[$this->modelClass->getPrimaryKey()];
+            $result[$key]['value'] = $value[$this->modelClass->getPrincipalAttribute()];
+        }
+        return ['success'=>true, 'data'=>$result];
+    }    
 }
 
 

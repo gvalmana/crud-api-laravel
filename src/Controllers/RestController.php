@@ -152,4 +152,14 @@ class RestController extends BaseController
         return response($result, Response::HTTP_NO_CONTENT);
     }
 
+    public function select2list(Request $request)
+    {
+        $params = $this->process_request($request);
+        $result = $this->service->select2_list($params);
+        if (count($result)==0) {
+            return response($result, Response::HTTP_NO_CONTENT);
+        }
+        return response($result, Response::HTTP_OK);        
+    }    
+
 }
