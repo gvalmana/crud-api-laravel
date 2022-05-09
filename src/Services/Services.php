@@ -351,8 +351,8 @@ class Services
         }
         $data = $query->get();
         foreach ($data as $key => $value) {
-            $result[$key]['option'] = $value[$this->modelClass->getPrimaryKey()];
-            $result[$key]['value'] = $value[$this->modelClass->getPrincipalAttribute()];
+            $result[$key]['value'] = $value[$this->modelClass->getPrimaryKey()];
+            $result[$key]['text'] = $value[$this->modelClass->getPrincipalAttribute()];
         }
         return ['success'=>true, 'data'=>$result];
     }    
