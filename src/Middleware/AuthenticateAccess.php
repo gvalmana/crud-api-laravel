@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Http\Middleware;
+namespace CrudApiRestfull\Middleware;
 
 use Closure;
 use GuzzleHttp\Client;

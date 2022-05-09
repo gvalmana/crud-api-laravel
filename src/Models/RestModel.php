@@ -260,7 +260,11 @@ class RestModel extends Model
             $result['success'] = false;
         return $result;
     }
-    
+
+    public function getPrincipalAttribute()
+    {
+        return null;
+    }
 }
 
 
