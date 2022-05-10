@@ -36,7 +36,7 @@ class RestController extends BaseController
         array_key_exists('pagination', $request->request->all()) ? $parameters['pagination'] = $request['pagination'] : $parameters['pagination'] = null;
         array_key_exists('orderby', $request->request->all()) ? $parameters['orderby'] = $request['orderby'] : $parameters['orderby'] = null;
         array_key_exists('oper', $request->request->all()) ? $parameters['oper'] = $request['oper'] : $parameters['oper'] = null;
-
+        array_key_exists('deleted', $request->request->all()) ? $parameters['deleted'] = $request['deleted'] : $parameters['deleted'] = null;
         return $parameters;
     }
 

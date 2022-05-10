@@ -132,6 +132,14 @@ class Services
         return explode("|", $value);
     }
 
+    protected function with_deleted($query, $params)
+    {
+        if ($params == true) {
+            $query = $query->withTrashed();
+        }
+        return $query;
+    }
+
     public function list_all($params)
     {
         $query = $this->modelClass->query();
@@ -149,6 +157,9 @@ class Services
         }
         if (isset($params['oper'])) {
             $query = $this->oper($query, $params['oper']);
+        }
+        if (isset($params['deleted'])) {
+            $query = $this->with_deleted($query, $params['deleted']);
         }
         if (isset($params['pagination']))
             return $this->pagination($query, $params['pagination']);
