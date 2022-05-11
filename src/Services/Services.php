@@ -132,6 +132,14 @@ class Services
         return explode("|", $value);
     }
 
+    protected function with_deleted($query, $params)
+    {
+        if ($params == true) {
+            $query = $query->withTrashed();
+        }
+        return $query;
+    }
+
     public function list_all($params)
     {
         $query = $this->modelClass->query();
@@ -149,6 +157,9 @@ class Services
         }
         if (isset($params['oper'])) {
             $query = $this->oper($query, $params['oper']);
+        }
+        if (isset($params['deleted'])) {
+            $query = $this->with_deleted($query, $params['deleted']);
         }
         if (isset($params['pagination']))
             return $this->pagination($query, $params['pagination']);
@@ -351,8 +362,8 @@ class Services
         }
         $data = $query->get();
         foreach ($data as $key => $value) {
-            $result[$key]['option'] = $value[$this->modelClass->getPrimaryKey()];
-            $result[$key]['value'] = $value[$this->modelClass->getPrincipalAttribute()];
+            $result[$key]['value'] = $value[$this->modelClass->getPrimaryKey()];
+            $result[$key]['text'] = $value[$this->modelClass->getPrincipalAttribute()];
         }
         return ['success'=>true, 'data'=>$result];
     }    
