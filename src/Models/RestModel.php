@@ -266,6 +266,3 @@ class RestModel extends Model
         return null;
     }
 }
-
-
-

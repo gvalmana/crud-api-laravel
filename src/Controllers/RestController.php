@@ -2,6 +2,7 @@
 namespace CrudApiRestfull\Controllers;
 
 use App\Services\Services;
+use CrudApiRestfull\Traits\HttpResponsable;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 use Illuminate\Foundation\Bus\DispatchesJobs;
@@ -14,7 +15,7 @@ use Symfony\Component\HttpFoundation\Response;
 
 class RestController extends BaseController
 {
-    use AuthorizesRequests, DispatchesJobs, ValidatesRequests;
+    use AuthorizesRequests, DispatchesJobs, ValidatesRequests, HttpResponsable;
 
     protected $modelClass = "";
 
@@ -22,6 +23,8 @@ class RestController extends BaseController
     protected $service = "";
 
     protected $not_found_message = 'Modelo no encontrado';
+    protected $created_message = 'Recurso creado correctamente';
+    protected $updated_message = 'Recurso actualizado correctamente';
     /**
      * Display a listing of the resource.
      * @return []
@@ -45,9 +48,9 @@ class RestController extends BaseController
         $params = $this->process_request($request);
         $result = $this->service->list_all($params);
         if (count($result)==0) {
-            return response($result, Response::HTTP_NO_CONTENT);
+            return $this->makeResponseNoContent();
         }
-        return response($result, Response::HTTP_OK);
+        return $this->makeResponseList($result);
     }
 
     /**
@@ -63,7 +66,7 @@ class RestController extends BaseController
         if (!$response['success']) {
             return response($response, Response::HTTP_UNPROCESSABLE_ENTITY);
         }
-        return response($response, Response::HTTP_OK);
+        return $this->makeResponseOK($response);
     }
 
     public function store(Request $request)
@@ -75,13 +78,13 @@ class RestController extends BaseController
             if ($result['success']){
                 DB::commit();
             } else {
-                return response($result, Response::HTTP_UNPROCESSABLE_ENTITY);
+                return $this->makeResponseUnprosesableEntity($result);
             }
         } catch (\Throwable $e) {
             DB::rollBack();
             throw $e;
         }
-        return response($result, Response::HTTP_CREATED);
+        return $this->makeResponseCreated($result, $this->created_message);
     }
 
     public function update(Request $request, $id)
@@ -94,13 +97,10 @@ class RestController extends BaseController
         } catch (\Throwable $exception) {
             DB::rollBack();
             if ($exception instanceof ModelNotFoundException) {
-                return response()->json([
-                    'sucess' => false,
-                    'error' => $this->not_found_message,
-                ], Response::HTTP_NOT_FOUND);
+                return $this->makeResponseNotFound($this->not_found_message);
             }            
         }
-        return response($result, Response::HTTP_OK);
+        return $this->makeResponseOK($result, $this->updated_message);
     }
 
     public function update_multiple(Request $request)
@@ -115,7 +115,7 @@ class RestController extends BaseController
             DB::rollBack();
             throw $e;
         }
-        return response($result, Response::HTTP_OK);
+        return $this->makeResponseOK($result);
     }
 
     public function show(Request $request, $id)
@@ -125,13 +125,10 @@ class RestController extends BaseController
             $result = $this->service->show($params, $id);
         } catch (\Throwable $exception) {
             if ($exception instanceof ModelNotFoundException) {
-                return response()->json([
-                    'sucess' => false,
-                    'error' => $this->not_found_message,
-                ], Response::HTTP_NOT_FOUND);
+                return $this->makeResponseNotFound($this->not_found_message);
             }
         }
-        return response($result,Response::HTTP_OK);
+        return $this->makeResponseOK($result);
     }
 
     public function destroy($id)
@@ -143,13 +140,10 @@ class RestController extends BaseController
         } catch (\Throwable $exception) {
             DB::rollBack();
             if ($exception instanceof ModelNotFoundException) {
-                return response()->json([
-                    'sucess' => false,
-                    'error' => $this->not_found_message,
-                ], Response::HTTP_NOT_FOUND);
+                return $this->makeResponseNotFound($this->not_found_message);
             }
         }
-        return response($result, Response::HTTP_NO_CONTENT);
+        return $this->makeResponseNoContent();
     }
 
     public function select2list(Request $request)
@@ -157,9 +151,9 @@ class RestController extends BaseController
         $params = $this->process_request($request);
         $result = $this->service->select2_list($params);
         if (count($result)==0) {
-            return response($result, Response::HTTP_NO_CONTENT);
+            return $this->makeResponseNoContent();
         }
-        return response($result, Response::HTTP_OK);        
+        return $this->makeResponseOK($result);
     }    
 
 }
