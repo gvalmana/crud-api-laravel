@@ -341,10 +341,7 @@ class Services
 
     public function destroy($id)
     {
-        $this->modelClass = $this->modelClass->query()->findOrFail($id);
-        $result = [];
-        $result['success'] = true;
-        $result['model'] = $this->modelClass;
+        $result = $this->modelClass->query()->findOrFail($id);
         if (!$this->modelClass->destroy($id))
             $result['success'] = false;
         return $result;
@@ -369,5 +366,16 @@ class Services
             $result[$key]['text'] = $value[$this->modelClass->getPrincipalAttribute()];
         }
         return $result;
-    }    
+    }
+
+    public function restore($id)
+    {
+        $model = $this->modelClass->withTrashed()->findOrFail($id);
+        if (!$model->restore()) {
+            $result['success'] = false;
+        }
+        return $model;
+    }
 }
+
+
