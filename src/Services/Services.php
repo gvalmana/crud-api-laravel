@@ -158,11 +158,14 @@ class Services
         if (isset($params['oper'])) {
             $query = $this->oper($query, $params['oper']);
         }
+
         if (isset($params['deleted'])) {
             $query = $this->with_deleted($query, $params['deleted']);
         }
+
         if (isset($params['pagination']))
             return $this->pagination($query, $params['pagination']);
+        
         return $query->get()->jsonSerialize();
     }
 
@@ -365,8 +368,6 @@ class Services
             $result[$key]['value'] = $value[$this->modelClass->getPrimaryKey()];
             $result[$key]['text'] = $value[$this->modelClass->getPrincipalAttribute()];
         }
-        return ['success'=>true, 'data'=>$result];
+        return $result;
     }    
 }
-
-
