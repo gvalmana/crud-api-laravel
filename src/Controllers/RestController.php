@@ -25,6 +25,8 @@ class RestController extends BaseController
     protected $not_found_message = 'Modelo no encontrado';
     protected $created_message = 'Recurso creado correctamente';
     protected $updated_message = 'Recurso actualizado correctamente';
+    protected $restored_message = 'Recurso restaurado correctamente';
+    protected $deleted_message = 'Recurso eliminado correctamente';
     /**
      * Display a listing of the resource.
      * @return []
@@ -143,7 +145,7 @@ class RestController extends BaseController
                 return $this->makeResponseNotFound($this->not_found_message);
             }
         }
-        return $this->makeResponseNoContent();
+        return $this->makeResponseOK($result, $this->deleted_message);
     }
 
     public function select2list(Request $request)
@@ -156,4 +158,15 @@ class RestController extends BaseController
         return $this->makeResponseOK($result);
     }    
 
+    public function restore(Request $request, $id)
+    {
+        try {
+            $result = $this->service->restore($id);
+        } catch (\Throwable $exception) {
+            if ($exception instanceof ModelNotFoundException) {
+                return $this->makeResponseNotFound($this->not_found_message);
+            }
+        }
+        return $this->makeResponseOK($result, $this->restored_message);
+    }
 }
