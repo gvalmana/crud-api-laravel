@@ -4,9 +4,7 @@ namespace CrudApiRestfull\Traits;
 
 use Exception;
 use Illuminate\Database\QueryException;
-use Illuminate\Support\Facades\Log;
 use Symfony\Component\HttpFoundation\Response;
-use CrudApiRestfull\Resources;
 use CrudApiRestfull\Resources\Messages;
 
 /**

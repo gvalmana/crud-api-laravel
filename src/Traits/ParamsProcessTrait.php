@@ -14,11 +14,10 @@ trait ParamsProcessTrait
     public $page = 1;
     public $filter = [];
     public $orderBy = 'id';
-    //public $allowedOrderBy = [];
     public $direction = 'ASC';
     public $parameters = [];
 
-    protected function processParams(Request $request)
+    protected function processParams(Request $request): void
     {
         if (isset($request->paginate)) {
             $this->pagination = $request->input('paginate', 20);
@@ -41,7 +40,7 @@ trait ParamsProcessTrait
         $this->direction = $request->input('direction', 'ASC');
     }
 
-    protected function processRequest(Request $request)
+    protected function processRequest(Request $request): array
     {
         $defaultParams = [
             'relations' => null,
@@ -57,7 +56,7 @@ trait ParamsProcessTrait
         return array_merge($defaultParams, $request->only(array_keys($defaultParams)));
     }
 
-    protected function addFilter($key, $value, $operator = '=')
+    protected function addFilter($key, $value, $operator = '='): void
     {
         $this->filter[] = compact('key', 'operator', 'value');
     }
