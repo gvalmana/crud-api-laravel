@@ -2,7 +2,7 @@
 
 namespace CrudApiRestfull\Services;
 
-use CrudApiRestfull\Contracts\InterfaceService;
+use CrudApiRestfull\Contracts\InterfaceServices;
 use CrudApiRestfull\Models\RestModel;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Pagination\Paginator;
@@ -10,7 +10,7 @@ use Illuminate\Pagination\Paginator;
 /**
  * @property Model $modelClass 
  */
-abstract class Services implements InterfaceService
+abstract class Services implements InterfaceServices
 {
 
     /** 

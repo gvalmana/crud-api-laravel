@@ -2,7 +2,7 @@
 
 namespace CrudApiRestfull\Contracts;
 
-interface InterfaceService
+interface InterfaceServices
 {
 
     public function selfValidate(array $attributes, $scenario = 'create', $specific = false);
