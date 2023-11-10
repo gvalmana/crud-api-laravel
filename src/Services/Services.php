@@ -237,10 +237,6 @@ abstract class Services implements InterfaceService
         return compact($success, $restored, $faileds);
     }
 
-    public function findBy(array $attributes)
-    {
-    }
-
     protected function pagination($query, string $pagination)
     {
         if (is_string($pagination))
