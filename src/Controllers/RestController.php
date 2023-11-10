@@ -12,7 +12,7 @@ use Illuminate\Support\Facades\DB;
 use Psy\Util\Json;
 use Symfony\Component\HttpFoundation\Response;
 use CrudApiRestfull\Resources\Messages;
-use CrudApiRestfull\Models\RestModel;
+use Illuminate\Database\Eloquent\Model;
 use CrudApiRestfull\Services\Services;
 
 class RestController extends BaseController
@@ -20,20 +20,20 @@ class RestController extends BaseController
     use AuthorizesRequests, DispatchesJobs, ValidatesRequests, HttpResponsable;
 
     /**
-     * @var RestModel $modelClass
+     * @var Model $modelClass
      */
-    protected RestModel $modelClass;
+    public Model $modelClass;
 
     /** 
      * @var Services $service 
      */
-    protected Services $service;
+    public Services $service;
 
-    protected $not_found_message = Messages::NOT_FOUND_MESSAGE;
-    protected $created_message = Messages::CREATED_SUCCESS_MESSAGE;
-    protected $updated_message = Messages::UPDATED_SUCCESS_MESSAGE;
-    protected $restored_message = Messages::RESTORED_MESSAGE;
-    protected $deleted_message = Messages::DELETED_MESSAGE;
+    public $not_found_message = Messages::NOT_FOUND_MESSAGE;
+    public $created_message = Messages::CREATED_SUCCESS_MESSAGE;
+    public $updated_message = Messages::UPDATED_SUCCESS_MESSAGE;
+    public $restored_message = Messages::RESTORED_MESSAGE;
+    public $deleted_message = Messages::DELETED_MESSAGE;
     
     /**
      * Display a listing of the resource.
