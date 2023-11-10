@@ -15,10 +15,11 @@ use CrudApiRestfull\Resources\Messages;
 use Illuminate\Database\Eloquent\Model;
 use CrudApiRestfull\Services\Services;
 use CrudApiRestfull\Traits\PaginationTrait;
+use CrudApiRestfull\Traits\ParamsProcessTrait;
 
 class RestController extends BaseController
 {
-    use AuthorizesRequests, DispatchesJobs, ValidatesRequests, HttpResponsable, PaginationTrait;
+    use AuthorizesRequests, DispatchesJobs, ValidatesRequests, HttpResponsable, ParamsProcessTrait;
 
     /**
      * @var Model $modelClass
