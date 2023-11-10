@@ -10,10 +10,9 @@ use Illuminate\Http\Request;
 trait ParamsProcessTrait
 {
 
-    public $pagination = 20;
-    public $page = 1;
+    public $pagination = ["pageSize"=>15, "page"=>1];
     public $filter = [];
-    public $orderBy = 'id';
+    public $orderBy = [['id'=>'ASC']];
     public $direction = 'ASC';
     public $parameters = [];
 
