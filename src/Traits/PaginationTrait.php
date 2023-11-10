@@ -11,6 +11,9 @@ trait PaginationTrait
 
     public function makeMetaData($data): array
     {
+        if (!isset($data)) {
+            return null;
+        }
         return [
             'total'=>$data->total(),
             'count'=>$data->count(),

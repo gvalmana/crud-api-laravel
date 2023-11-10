@@ -37,9 +37,6 @@ trait HttpResponsable
 
     public function makeResponseList($data, $links = null)
     {
-        if (empty($links)) {
-            $links = $this->makeMetaData($data);
-        }
         $response['success'] = true;
         $response['type'] = Messages::TYPE_SUCCESS;
         $response['data'] = $data;
