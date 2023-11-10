@@ -26,24 +26,24 @@ class RestController extends BaseController
      */
     public Model $modelClass;
 
-    /** 
-     * @var Services $service 
+    /**
+     * @var Services $service
      */
     public Services $service;
-
+    public $apiResource;
     public $not_found_message = Messages::NOT_FOUND_MESSAGE;
     public $created_message = Messages::CREATED_SUCCESS_MESSAGE;
     public $updated_message = Messages::UPDATED_SUCCESS_MESSAGE;
     public $restored_message = Messages::RESTORED_MESSAGE;
     public $deleted_message = Messages::DELETED_MESSAGE;
-    
+
     /**
      * Display a listing of the resource.
      * @return []
      */
     public function index(Request $request)
     {
-        $params = $this->process_request($request);
+        $params = $this->processRequest($request);
         $result = $this->service->listAll($params);
         $links = null;
         if ($result->count()==0) {
@@ -100,7 +100,7 @@ class RestController extends BaseController
             DB::rollBack();
             if ($exception instanceof ModelNotFoundException) {
                 return $this->makeResponseNotFound($this->not_found_message);
-            }            
+            }
         }
         return $this->makeResponseOK($result, $this->updated_message);
     }
@@ -156,7 +156,7 @@ class RestController extends BaseController
             return $this->makeResponseNoContent();
         }
         return $this->makeResponseOK($result);
-    }    
+    }
 
     public function restore(Request $request, $id)
     {
