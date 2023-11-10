@@ -1,7 +1,7 @@
 <?php
 namespace CrudApiRestfull\Controllers;
 
-use App\Services\Services;
+use CrudApiRestfull\Services;
 use CrudApiRestfull\Traits\HttpResponsable;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
@@ -12,39 +12,33 @@ use Illuminate\Routing\Controller as BaseController;
 use Illuminate\Support\Facades\DB;
 use Psy\Util\Json;
 use Symfony\Component\HttpFoundation\Response;
+use CrudApiRestfull\Resources\Messages;
+use CrudApiRestfull\Models\RestModel;
 
 class RestController extends BaseController
 {
     use AuthorizesRequests, DispatchesJobs, ValidatesRequests, HttpResponsable;
 
+    /**
+     * @var RestModel $modelClass
+     */
     protected $modelClass = "";
 
-    /** @var Services $service */
+    /** 
+     * @var Services $service 
+     */
     protected $service = "";
 
-    protected $not_found_message = 'Modelo no encontrado';
-    protected $created_message = 'Recurso creado correctamente';
-    protected $updated_message = 'Recurso actualizado correctamente';
-    protected $restored_message = 'Recurso restaurado correctamente';
-    protected $deleted_message = 'Recurso eliminado correctamente';
+    protected $not_found_message = Messages::NOT_FOUND_MESSAGE;
+    protected $created_message = Messages::CREATED_SUCCESS_MESSAGE;
+    protected $updated_message = Messages::UPDATED_SUCCESS_MESSAGE;
+    protected $restored_message = Messages::RESTORED_MESSAGE;
+    protected $deleted_message = Messages::DELETED_MESSAGE;
+    
     /**
      * Display a listing of the resource.
      * @return []
      */
-    protected function process_request(Request $request)
-    {
-        $parameters = [];
-        array_key_exists('relations', $request->request->all()) ? $parameters['relations'] = $request['relations'] : $parameters['relations'] = null;
-        array_key_exists('attr', $request->request->all()) ? $parameters['attr'] = $request['attr'] : $parameters['attr'] = null;
-        array_key_exists('eq', $request->request->all()) ? $parameters['attr'] = $request['eq'] : false;
-        array_key_exists('select', $request->request->all()) ? $parameters['select'] = $request['select'] : $parameters['select'] = "*";
-        array_key_exists('pagination', $request->request->all()) ? $parameters['pagination'] = $request['pagination'] : $parameters['pagination'] = null;
-        array_key_exists('orderby', $request->request->all()) ? $parameters['orderby'] = $request['orderby'] : $parameters['orderby'] = null;
-        array_key_exists('oper', $request->request->all()) ? $parameters['oper'] = $request['oper'] : $parameters['oper'] = null;
-        array_key_exists('deleted', $request->request->all()) ? $parameters['deleted'] = $request['deleted'] : $parameters['deleted'] = null;
-        return $parameters;
-    }
-
     public function index(Request $request)
     {
         $params = $this->process_request($request);
@@ -168,5 +162,19 @@ class RestController extends BaseController
             }
         }
         return $this->makeResponseOK($result, $this->restored_message);
+    }
+
+    protected function process_request(Request $request)
+    {
+        $parameters = [];
+        array_key_exists('relations', $request->request->all()) ? $parameters['relations'] = $request['relations'] : $parameters['relations'] = null;
+        array_key_exists('attr', $request->request->all()) ? $parameters['attr'] = $request['attr'] : $parameters['attr'] = null;
+        array_key_exists('eq', $request->request->all()) ? $parameters['attr'] = $request['eq'] : false;
+        array_key_exists('select', $request->request->all()) ? $parameters['select'] = $request['select'] : $parameters['select'] = "*";
+        array_key_exists('pagination', $request->request->all()) ? $parameters['pagination'] = $request['pagination'] : $parameters['pagination'] = null;
+        array_key_exists('orderby', $request->request->all()) ? $parameters['orderby'] = $request['orderby'] : $parameters['orderby'] = null;
+        array_key_exists('oper', $request->request->all()) ? $parameters['oper'] = $request['oper'] : $parameters['oper'] = null;
+        array_key_exists('deleted', $request->request->all()) ? $parameters['deleted'] = $request['deleted'] : $parameters['deleted'] = null;
+        return $parameters;
     }
 }

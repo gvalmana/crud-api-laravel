@@ -1,26 +1,28 @@
 {
-    "name": "gvalmana/crud-api-laravel",
-    "description": "Libreria para CRUD en API de Laravel",
-    "type": "library",
-    "license": "MIT",
-    "authors": [
-        {
-            "name": "Gustavo Valmaña Villalonga",
-            "email": "gustavo.shotokai@gmail.com"
-        }
-    ],
-    "minimum-stability": "stable",
-    "require": {
-        "php": "~7.3|~8.0"
-    },
-    "autoload": {
-        "psr-4": {
-            "CrudApiRestfull\\": "src/",
-            "CrudApiRestfull\\Controllers\\": "src/Controllers",
-            "CrudApiRestfull\\Models\\": "src/Models",
-            "CrudApiRestfull\\Services\\": "src/Services",
-            "CrudApiRestfull\\Test\\": "src/Test",
-            "CrudApiRestfull\\Middleware\\": "src/Middleware"
-        }
-    }    
+  "name": "gvalmana/crud-api-laravel",
+  "description": "Libreria para CRUD en API de Laravel",
+  "type": "vcs",
+  "license": "MIT",
+  "authors": [
+    {
+      "name": "Gustavo Valmaña Villalonga",
+      "email": "gustavo.shotokai@gmail.com"
+    }
+  ],
+  "minimum-stability": "stable",
+  "require": {
+    "php": "^7.4|^8.0"
+  },
+  "autoload": {
+    "psr-4": {
+      "CrudApiRestfull\\": "src/",
+      "CrudApiRestfull\\Controllers\\": "src/Controllers",
+      "CrudApiRestfull\\Models\\": "src/Models",
+      "CrudApiRestfull\\Services\\": "src/Services",
+      "CrudApiRestfull\\Test\\": "src/Test",
+      "CrudApiRestfull\\Middleware\\": "src/Middleware",
+      "CrudApiRestfull\\Resources\\": "src/Resources",
+      "CrudApiRestfull\\Enums\\": "src/Enums"
+    }
+  }
 }
