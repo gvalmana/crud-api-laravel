@@ -66,7 +66,7 @@ trait HttpResponsable
     {
         $response['success'] = false;
         $response['type'] = Messages::TYPE_SUCCESS;
-        $response['data'] = null;
+        $response['data'] = [];
         $response['message'] = $this->checkMessage($message) ? $message : Messages::NOT_FOUND_MESSAGE;
         return response()->json($response, Response::HTTP_NOT_FOUND);
     }

@@ -155,7 +155,7 @@ abstract class Services implements InterfaceServices
         return compact($success, $models);
     }
 
-    public function show($id, array $params)
+    public function show($id, array|string $params)
     {
         $query = $this->modelClass->query();
         if (isset($params['relations'])) {

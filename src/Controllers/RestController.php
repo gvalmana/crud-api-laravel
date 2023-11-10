@@ -16,6 +16,7 @@ use Illuminate\Database\Eloquent\Model;
 use CrudApiRestfull\Services\Services;
 use CrudApiRestfull\Traits\PaginationTrait;
 use CrudApiRestfull\Traits\ParamsProcessTrait;
+use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 
 class RestController extends BaseController
 {
@@ -43,7 +44,7 @@ class RestController extends BaseController
      */
     public function index(Request $request)
     {
-        $params = $this->processRequest($request);
+        $params = $this->processParams($request);
         $result = $this->service->listAll($params);
         $links = null;
         if ($result->count()==0) {
@@ -59,17 +60,6 @@ class RestController extends BaseController
      * Display a listing of the resource.
      * @return Json
      */
-    public function validate_model(Request $request)
-    {
-        $params = $request->request->all();
-        $scenario = isset($params['_scenario']) ? $params['_scenario'] : "create";
-        $specific = isset($params["_specific"]) ? $params["_specific"] : false;
-        $response = $this->service->validate_all($params, $scenario, $specific);
-        if (!$response['success']) {
-            return response($response, Response::HTTP_UNPROCESSABLE_ENTITY);
-        }
-        return $this->makeResponseOK($response);
-    }
 
     public function store(Request $request)
     {
@@ -105,32 +95,18 @@ class RestController extends BaseController
         return $this->makeResponseOK($result, $this->updated_message);
     }
 
-    public function update_multiple(Request $request)
-    {
-        DB::beginTransaction();
-        try {
-            $params = $request->all();
-            $result = $this->service->update_multiple($params);
-            if ($result['success'])
-                DB::commit();
-        } catch (\Throwable $e) {
-            DB::rollBack();
-            throw $e;
-        }
-        return $this->makeResponseOK($result);
-    }
-
     public function show(Request $request, $id)
     {
         try {
-            $params = $this->process_request($request);
-            $result = $this->service->show($params, $id);
-        } catch (\Throwable $exception) {
-            if ($exception instanceof ModelNotFoundException) {
-                return $this->makeResponseNotFound($this->not_found_message);
-            }
+            $params = $this->processRequest($request);
+            $result = $this->service->show($id, $params);
+            return $this->makeResponseOK($result);
+        } catch (NotFoundHttpException $ex) {
+            return $this->makeResponseNotFound();
+        } catch (ModelNotFoundException $ex) {
+            return $this->makeResponseNotFound();
         }
-        return $this->makeResponseOK($result);
+
     }
 
     public function destroy($id)
@@ -151,7 +127,7 @@ class RestController extends BaseController
     public function select2list(Request $request)
     {
         $params = $this->process_request($request);
-        $result = $this->service->select2_list($params);
+        $result = $this->service->select2List($params);
         if (count($result)==0) {
             return $this->makeResponseNoContent();
         }
@@ -170,17 +146,30 @@ class RestController extends BaseController
         return $this->makeResponseOK($result, $this->restored_message);
     }
 
-    protected function process_request(Request $request)
+    public function updateMultiple(Request $request)
     {
-        $parameters = [];
-        array_key_exists('relations', $request->request->all()) ? $parameters['relations'] = $request['relations'] : $parameters['relations'] = null;
-        array_key_exists('attr', $request->request->all()) ? $parameters['attr'] = $request['attr'] : $parameters['attr'] = null;
-        array_key_exists('eq', $request->request->all()) ? $parameters['attr'] = $request['eq'] : false;
-        array_key_exists('select', $request->request->all()) ? $parameters['select'] = $request['select'] : $parameters['select'] = "*";
-        array_key_exists('pagination', $request->request->all()) ? $parameters['pagination'] = $request['pagination'] : $parameters['pagination'] = null;
-        array_key_exists('orderby', $request->request->all()) ? $parameters['orderby'] = $request['orderby'] : $parameters['orderby'] = null;
-        array_key_exists('oper', $request->request->all()) ? $parameters['oper'] = $request['oper'] : $parameters['oper'] = null;
-        array_key_exists('deleted', $request->request->all()) ? $parameters['deleted'] = $request['deleted'] : $parameters['deleted'] = null;
-        return $parameters;
+        DB::beginTransaction();
+        try {
+            $params = $request->all();
+            $result = $this->service->updateMultiple($params);
+            if ($result['success'])
+                DB::commit();
+        } catch (\Throwable $e) {
+            DB::rollBack();
+            throw $e;
+        }
+        return $this->makeResponseOK($result);
+    }
+
+    public function validateModel(Request $request)
+    {
+        $params = $request->request->all();
+        $scenario = isset($params["_scenario"]) ? $params["_scenario"] : "create";
+        $specific = isset($params["_specific"]) ? $params["_specific"] : false;
+        $response = $this->service->selfValidate($params, $scenario, $specific);
+        if (!$response['success']) {
+            return $this->makeResponseUnprosesableEntity($response['errors']);
+        }
+        return $this->makeResponseOK($response);
     }
 }
