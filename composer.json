@@ -1,7 +1,7 @@
 {
   "name": "gvalmana/crud-api-laravel",
   "description": "Libreria para CRUD en API de Laravel",
-  "type": "library",
+  "type": "vcs",
   "license": "MIT",
   "authors": [
     {
