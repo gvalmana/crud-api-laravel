@@ -12,7 +12,7 @@ use CrudApiRestfull\Resources\Messages;
  */
 trait HttpResponsable
 {
-    public function makeResponse(bool $success, string $message, int $status_code, array $error = null)
+    public function makeResponse(bool $success, string $message, int $status_code, $error = null)
     {
         $response['success'] = $success;
         $response['message'] = $message;
@@ -24,7 +24,7 @@ trait HttpResponsable
         return response()->json($response, $status_code);
     }
 
-    public function makeResponseOK(array $data = [], string $message = null)
+    public function makeResponseOK($data = [], string $message = null)
     {
         $response['success'] = true;
         $response['type'] = Messages::TYPE_SUCCESS;
@@ -35,7 +35,7 @@ trait HttpResponsable
         return response()->json($response, Response::HTTP_OK);
     }
 
-    public function makeResponseList(array $data, array $links = null)
+    public function makeResponseList($data, $links = null)
     {
         if (empty($links)) {
             $links = $this->makeMetaData($data);
@@ -47,7 +47,7 @@ trait HttpResponsable
         return response()->json($response, Response::HTTP_OK);
     }
 
-    public function makeResponseCreated(array $data, string $message = null)
+    public function makeResponseCreated($data, string $message = null)
     {
         $response['success'] = true;
         $response['type'] = Messages::TYPE_SUCCESS;
@@ -56,7 +56,7 @@ trait HttpResponsable
         return response()->json($response, Response::HTTP_CREATED);
     }
 
-    public function makeResponseUpdated(array $data, string $message = null, int $status_code = Response::HTTP_OK)
+    public function makeResponseUpdated($data, string $message = null, int $status_code = Response::HTTP_OK)
     {
         $response['success'] =  true;
         $response['type'] = Messages::TYPE_SUCCESS;
@@ -74,7 +74,7 @@ trait HttpResponsable
         return response()->json($response, Response::HTTP_NOT_FOUND);
     }
 
-    public function makeResponseUnprosesableEntity(array $error, string $message = null)
+    public function makeResponseUnprosesableEntity($error, string $message = null)
     {
         $response['success'] = false;
         $response['type'] = Messages::TYPE_ERROR;
