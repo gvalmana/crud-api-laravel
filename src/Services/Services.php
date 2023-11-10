@@ -8,10 +8,9 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Pagination\Paginator;
 
 /**
- * @property Model $modelClass
- *
- * */
-class Services implements InterfaceService
+ * @property Model $modelClass 
+ */
+abstract class Services implements InterfaceService
 {
 
     /** 
@@ -242,7 +241,7 @@ class Services implements InterfaceService
     {
     }
 
-    protected function pagination($query, $pagination)
+    protected function pagination($query, string $pagination)
     {
         if (is_string($pagination))
             $pagination = json_decode($pagination, true);
@@ -254,7 +253,7 @@ class Services implements InterfaceService
         return $query->paginate($pageSize);
     }
 
-    protected function relations($query, $params)
+    protected function relations($query, array|string $params)
     {
         if ($params == 'all' || array_search("all", $params) !== false)
             $query = $query->with($this->modelClass::RELATIONS);
@@ -263,29 +262,37 @@ class Services implements InterfaceService
         return $query;
     }
 
-    protected function eq_attr($query, $params)
+    protected function eq_attr($query, array|string $params)
     {
         if (is_string($params)) {
             $params = json_decode($params);
         }
-        foreach ($params as $index => $parameter) {
-            if (is_array($parameter)) {
-                $query = $query->whereIn($index, $parameter);
+        foreach ($params as $index => $value) {
+            if (is_array($value)) {
+                $query = $query->whereIn($index, $value);
             } else
-                $query = $query->where([$index => $parameter]);
+                $query = $query->where($index, $value);
         }
         return $query;
     }
 
-    protected function order_by($query, $params)
+    protected function order_by($query, array|string $params)
     {
         foreach ($params as $elements) {
             if (is_string($elements)) {
                 $elements = json_decode($elements, true);
             }
-            foreach ($elements as $index => $parameter) {
-                $query = $query->orderBy($index, $parameter);
+            foreach ($elements as $index => $value) {
+                $query = $query->orderBy($index, $value);
             }
+        }
+        return $query;
+    }
+
+    protected function with_deleted($query, bool $params)
+    {
+        if ($params == true) {
+            $query = $query->withTrashed();
         }
         return $query;
     }
@@ -345,13 +352,5 @@ class Services implements InterfaceService
     protected function process_oper($value)
     {
         return explode("|", $value);
-    }
-
-    protected function with_deleted($query, $params)
-    {
-        if ($params == true) {
-            $query = $query->withTrashed();
-        }
-        return $query;
     }
 }
