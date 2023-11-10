@@ -10,11 +10,11 @@ use Illuminate\Http\Request;
 trait ParamsProcessTrait
 {
 
-    public $pagination = ["pageSize"=>15, "page"=>1];
+    public $pagination = ["pageSize" => 15, "page" => 1];
     public $filter = [];
-    public $orderBy = [['id'=>'ASC']];
-    public $direction = 'ASC';
+    public $orderBy = ["id" => "ASC"];
     public $parameters = [];
+    public $select = ['*'];
 
     protected function processParams(Request $request): void
     {
@@ -41,18 +41,21 @@ trait ParamsProcessTrait
 
     protected function processRequest(Request $request): array
     {
+        if (gettype($request->input('filter')) == 'string') {
+            $this->filter = $request->input('filter') ? json_decode($request->input('filter')) : [];
+        } else {
+            $this->filter = $request->input('filter') ? $request->input('filter') : [];
+        }
         $defaultParams = [
-            'relations' => null,
-            'attr' => null,
-            'filter' => [],
-            'select' => '*',
-            'pagination' => $this->pagination,
-            'page' => $this->page,
-            'orderBy' => $this->orderBy,
-            'direction' => $this->direction,
-            'deleted' => false,
+            'relations' => $request->input('relations', null),
+            'attr' => $request->input('attr', null),
+            'filter' => $this->filter,
+            'select' => $request->input('select', null),
+            'pagination' => $request->input('pagination'),
+            'orderBy' => isset($request->orderBy) ? $request->orderBy : $this->orderBy,
+            'deleted' => $request->input('deletd', false),
         ];
-        return array_merge($defaultParams, $request->only(array_keys($defaultParams)));
+        return $defaultParams;
     }
 
     protected function addFilter($key, $value, $operator = '='): void

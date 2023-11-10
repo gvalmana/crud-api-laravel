@@ -45,10 +45,14 @@ class RestController extends BaseController
     {
         $params = $this->process_request($request);
         $result = $this->service->listAll($params);
-        if (count($result)==0) {
+        $links = null;
+        if ($result->count()==0) {
             return $this->makeResponseNoContent();
         }
-        return $this->makeResponseList($result);
+        if (isset($request["pagination"])) {
+            $links = $this->makeMetaData($result);
+        }
+        return $this->makeResponseList($this->apiResource::collection($result), $links);
     }
 
     /**

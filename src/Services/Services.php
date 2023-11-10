@@ -6,14 +6,15 @@ use CrudApiRestfull\Contracts\InterfaceServices;
 use CrudApiRestfull\Models\RestModel;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Pagination\Paginator;
+use Illuminate\Support\Facades\Log;
 
 /**
- * @property Model $modelClass 
+ * @property Model $modelClass
  */
 abstract class Services implements InterfaceServices
 {
 
-    /** 
+    /**
      * @var RestModel|string $modelClass
      */
     public $modelClass = '';
@@ -32,8 +33,11 @@ abstract class Services implements InterfaceServices
     public function listAll(array $params)
     {
         $query = $this->modelClass->query();
+        if (isset($params["filter"])) {
+            $query = $this->buildQueryFilters($query, $params["filter"]);
+        }
         if (isset($params["attr"])) {
-            $query->av = $this->eq_attr($query, $params['attr']);
+            $query = $this->eqAttr($query, $params['attr']);
         }
         if (isset($params['relations'])) {
             $query = $this->relations($query, $params['relations']);
@@ -42,18 +46,18 @@ abstract class Services implements InterfaceServices
             $query = $query->select($params['select']);
         }
         if (isset($params['orderBy'])) {
-            $query = $this->order_by($query, $params['orderby']);
+            $query = $this->orderBy($query, $params['orderBy']);
         }
         if (isset($params['oper'])) {
             $query = $this->oper($query, $params['oper']);
         }
 
         if (isset($params['deleted'])) {
-            $query = $this->with_deleted($query, $params['deleted']);
+            $query = $this->withDeleted($query, $params['deleted']);
         }
 
         if (isset($params['pagination']))
-            return $this->pagination($query, $params['pagination']);
+            return $this->makePagination($query, $params['pagination']);
 
         return $query->get();
     }
@@ -194,10 +198,10 @@ abstract class Services implements InterfaceServices
         $query = $this->modelClass->query();
         $result = [];
         if (isset($params["attr"])) {
-            $query->av = $this->eq_attr($query, $params['attr']);
+            $query = $this->eqAttr($query, $params['attr']);
         }
         if (isset($params['orderBy'])) {
-            $query = $this->order_by($query, $params['orderby']);
+            $query = $this->orderBy($query, $params['orderby']);
         }
         if (isset($params['oper'])) {
             $query = $this->oper($query, $params['oper']);
@@ -237,16 +241,37 @@ abstract class Services implements InterfaceServices
         return compact($success, $restored, $faileds);
     }
 
-    protected function pagination($query, string|array $pagination)
+    protected function buildQueryFilters($query, string|array $filter)
+    {
+        if (is_string($filter)) {
+            $filter = json_decode($filter, true);
+        }
+        if (is_array($filter)) {
+            foreach ($filter as $field => $item) {
+                if (is_array($item)) {
+                    list($field, $condition, $value) = $item;
+                    if (is_array($value) && $condition == "in") {
+                        $query->whereIn($field, $value);
+                    } else {
+                        $query->where($field, $condition, $value);
+                    }
+                } else {
+                    $query->where($field, '=', $item);
+                }
+            }
+        } else {
+            Log::warning("Query Filter recibed with errors");
+        }
+        return $query;
+    }
+
+    protected function makePagination($query, string|array $pagination)
     {
         if (is_string($pagination))
             $pagination = json_decode($pagination, true);
         $currentPage = isset($pagination["page"]) ? $pagination["page"] : 1;
         $pageSize = isset($pagination["pageSize"]) ? $pagination["pageSize"] : $this->modelClass->perPage;
-        Paginator::currentPageResolver(function () use ($currentPage) {
-            return $currentPage;
-        });
-        return $query->paginate($pageSize);
+        return $query->paginate($pageSize, ['*'], 'page', $currentPage);
     }
 
     protected function relations($query, array|string $params)
@@ -258,7 +283,7 @@ abstract class Services implements InterfaceServices
         return $query;
     }
 
-    protected function eq_attr($query, array|string $params)
+    protected function eqAttr($query, array|string $params)
     {
         if (is_string($params)) {
             $params = json_decode($params);
@@ -272,7 +297,7 @@ abstract class Services implements InterfaceServices
         return $query;
     }
 
-    protected function order_by($query, array|string $params)
+    protected function orderBy($query, array|string $params)
     {
         foreach ($params as $elements) {
             if (is_string($elements)) {
@@ -285,7 +310,7 @@ abstract class Services implements InterfaceServices
         return $query;
     }
 
-    protected function with_deleted($query, bool $params)
+    protected function withDeleted($query, bool $params)
     {
         if ($params == true) {
             $query = $query->withTrashed();
