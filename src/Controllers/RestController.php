@@ -19,7 +19,7 @@ use CrudApiRestfull\Traits\ParamsProcessTrait;
 
 class RestController extends BaseController
 {
-    use AuthorizesRequests, DispatchesJobs, ValidatesRequests, HttpResponsable, ParamsProcessTrait;
+    use AuthorizesRequests, DispatchesJobs, ValidatesRequests, HttpResponsable, ParamsProcessTrait, PaginationTrait;
 
     /**
      * @var Model $modelClass
