@@ -14,10 +14,11 @@ use Symfony\Component\HttpFoundation\Response;
 use CrudApiRestfull\Resources\Messages;
 use Illuminate\Database\Eloquent\Model;
 use CrudApiRestfull\Services\Services;
+use CrudApiRestfull\Traits\PaginationTrait;
 
 class RestController extends BaseController
 {
-    use AuthorizesRequests, DispatchesJobs, ValidatesRequests, HttpResponsable;
+    use AuthorizesRequests, DispatchesJobs, ValidatesRequests, HttpResponsable, PaginationTrait;
 
     /**
      * @var Model $modelClass
