@@ -22,7 +22,9 @@
       "CrudApiRestfull\\Test\\": "src/Test",
       "CrudApiRestfull\\Middleware\\": "src/Middleware",
       "CrudApiRestfull\\Resources\\": "src/Resources",
-      "CrudApiRestfull\\Enums\\": "src/Enums"
+      "CrudApiRestfull\\Enums\\": "src/Enums",
+      "CrudApiRestfull\\Contracts\\":"src/Contracts",
+      "CrudApiRestfull\\Traits\\":"src/Traits"
     }
   }
 }
