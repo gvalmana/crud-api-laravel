@@ -1,7 +1,6 @@
 <?php
 namespace CrudApiRestfull\Controllers;
 
-use CrudApiRestfull\Services;
 use CrudApiRestfull\Traits\HttpResponsable;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
@@ -14,6 +13,7 @@ use Psy\Util\Json;
 use Symfony\Component\HttpFoundation\Response;
 use CrudApiRestfull\Resources\Messages;
 use CrudApiRestfull\Models\RestModel;
+use CrudApiRestfull\Services\Services;
 
 class RestController extends BaseController
 {
@@ -22,12 +22,12 @@ class RestController extends BaseController
     /**
      * @var RestModel $modelClass
      */
-    protected $modelClass = "";
+    protected RestModel $modelClass;
 
     /** 
      * @var Services $service 
      */
-    protected $service = "";
+    protected Services $service;
 
     protected $not_found_message = Messages::NOT_FOUND_MESSAGE;
     protected $created_message = Messages::CREATED_SUCCESS_MESSAGE;
@@ -42,7 +42,7 @@ class RestController extends BaseController
     public function index(Request $request)
     {
         $params = $this->process_request($request);
-        $result = $this->service->list_all($params);
+        $result = $this->service->listAll($params);
         if (count($result)==0) {
             return $this->makeResponseNoContent();
         }
