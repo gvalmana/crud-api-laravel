@@ -98,9 +98,9 @@ class RestController extends BaseController
     public function show(Request $request, $id)
     {
         try {
-            $params = $this->processRequest($request);
+            $params = $this->processParams($request);
             $result = $this->service->show($id, $params);
-            return $this->makeResponseOK($result);
+            return $this->makeResponseOK($this->apiResource::make($result));
         } catch (NotFoundHttpException $ex) {
             return $this->makeResponseNotFound();
         } catch (ModelNotFoundException $ex) {
@@ -126,7 +126,7 @@ class RestController extends BaseController
 
     public function select2list(Request $request)
     {
-        $params = $this->process_request($request);
+        $params = $this->processParams($request);
         $result = $this->service->select2List($params);
         if (count($result)==0) {
             return $this->makeResponseNoContent();

@@ -197,19 +197,22 @@ abstract class Services implements InterfaceServices
     {
         $query = $this->modelClass->query();
         $result = [];
+        if (isset($params["filter"])) {
+            $query = $this->buildQueryFilters($query, $params["filter"]);
+        }
         if (isset($params["attr"])) {
             $query = $this->eqAttr($query, $params['attr']);
         }
         if (isset($params['orderBy'])) {
-            $query = $this->orderBy($query, $params['orderby']);
+            $query = $this->orderBy($query, $params['orderBy']);
         }
         if (isset($params['oper'])) {
             $query = $this->oper($query, $params['oper']);
         }
         $data = $query->get();
         foreach ($data as $key => $value) {
+            $result[$key]['option'] = $value[$this->modelClass->getPrincipalAttribute()];
             $result[$key]['value'] = $value[$this->modelClass->getPrimaryKey()];
-            $result[$key]['text'] = $value[$this->modelClass->getPrincipalAttribute()];
         }
         return $result;
     }
