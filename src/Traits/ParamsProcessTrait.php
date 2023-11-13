@@ -31,6 +31,7 @@ trait ParamsProcessTrait
             'pagination' => $request->input('pagination', null),
             'orderBy' => $request->input('orderBy', $this->orderBy),
             'deleted' => $request->input('deleted', false),
+            'oper' => $request->input('oper', null)
         ];
         return $defaultParams;
     }
