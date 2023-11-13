@@ -2,6 +2,7 @@
 
 namespace CrudApiRestfull\Services;
 
+use CrudApiRestfull\Contracts\InterfaceListServices;
 use CrudApiRestfull\Contracts\InterfaceServices;
 use CrudApiRestfull\Models\RestModel;
 use Illuminate\Database\Eloquent\Model;
@@ -11,7 +12,7 @@ use Illuminate\Support\Facades\Log;
 /**
  * @property Model $modelClass
  */
-abstract class Services implements InterfaceServices
+abstract class ServicesList implements InterfaceListServices
 {
 
     /**
@@ -62,103 +63,6 @@ abstract class Services implements InterfaceServices
         return $query->get();
     }
 
-    public function selfValidate(array $attributes, $scenario = 'create', $specific = false)
-    {
-        $errors = [];
-        if (isset($attributes[$this->modelClass->getPrimaryKey()]) && $scenario == 'create') {
-            $scenario = "update";
-        }
-        $this->modelClass->setScenario($scenario);
-        $this->modelClass->fill($attributes);
-        $valid = $this->modelClass->selfValidate($this->modelClass->getScenario(), $specific, false);
-        $success = true;
-        $errors = [];
-        if (!$valid['success']) {
-            $success = false;
-            array_push($errors, $valid);
-        }
-        return compact('success', 'errors');
-    }
-
-    public function create(array $params)
-    {
-        if (isset($params[$this->modelClass::MODEL]) || array_key_exists(0, $params)) {
-            $result = $this->saveArray($params[$this->modelClass::MODEL]);
-        } else {
-            $result = $this->save($params);
-        }
-        return $result;
-    }
-
-    public function save(array $attributes, $scenario = 'create')
-    {
-        if (isset($attributes[$this->modelClass->getPrimaryKey()])) {
-            $this->modelClass = $this->modelClass::find($attributes[$this->modelClass->getPrimaryKey()]);
-            $this->modelClass->setScenario('update');
-        }
-        $success = true;
-        $validate_all = $this->selfValidate($attributes, $this->modelClass->getScenario());
-        if (!$validate_all['success'])
-            dd($validate_all);
-            $success = false;
-            $errors = $validate_all['errors'];
-            $model = $validate_all['model'];
-            return compact('success', 'errors', 'model');
-        $this->modelClass->fill($attributes);
-        $this->modelClass->save();
-        $model = $this->modelClass->getAttributes();
-        return compact('success', 'model');
-    }
-
-    public function saveArray(array $attributes, $scenario = 'create')
-    {
-        $success = true;
-        $models = [];
-        foreach ($attributes as $index => $model) {
-            $result = $this->save($model, $scenario);
-            if (!$result['success']) {
-                $success = false;
-            }
-            $models['models'][$index] = $result;
-        }
-        return compact('success', 'models');
-    }
-
-    public function update($id, array $attributes)
-    {
-        $success = true;
-        $errors = [];
-        $this->modelClass = $this->modelClass->query()->findOrFail($id);
-        $this->modelClass->setScenario("update");
-        $specific = isset($attributes["_specific"]) ? $attributes["_specific"] : false;
-        $valid = $this->modelClass->self_validate($this->modelClass->getScenario(), $specific);
-        if (!$valid['success']) {
-            $success = false;
-            array_push($errors, $valid);
-            return compact($success, $errors);
-        } else {
-            $this->modelClass->fill($attributes);
-            $this->modelClass->save();
-            $model = $this->modelClass;
-        }
-        return compact('success', 'model');
-    }
-
-    public function updateMultiple(array $params)
-    {
-        $success = true;
-        $models = [];
-        foreach ($params as $index => $item) {
-            $id = $item[$this->modelClass->getPrimaryKey()];
-            $res = $this->update($item, $id);
-            if (!$res['success']) {
-                $success = false;
-            }
-            $models['models'][$index] = $res;
-        }
-        return compact('success', 'models');
-    }
-
     public function show($id, array|string $params)
     {
         $query = $this->modelClass->query();
@@ -169,32 +73,6 @@ abstract class Services implements InterfaceServices
             $query = $query->select($params['select']);
         }
         return $query->findOrFail($id);
-    }
-
-    public function destroy($id)
-    {
-        $model = $this->modelClass->query()->findOrFail($id);
-        $success = true;
-        if (!$this->modelClass->destroy($id))
-            $success = false;
-        return compact('success', 'model');
-    }
-
-    public function destroyByIds(array $ids)
-    {
-        $models = $this->modelClass->query()->whereIn($this->modelClass->getPrimaryKey(), $ids);
-        $success = true;
-        $faileds = [];
-        $deleteds = [];
-        foreach ($models as $row) {
-            if (!$row->destroy()) {
-                $success = false;
-                $faileds[] = $row->id;
-            } else {
-                $deleteds[] = $row->id;
-            }
-        }
-        return compact('success', 'deleteds', 'faileds');
     }
 
     public function select2List($params)
@@ -221,33 +99,6 @@ abstract class Services implements InterfaceServices
         return $result;
     }
 
-    public function restore($id)
-    {
-        $model = $this->modelClass->withTrashed()->findOrFail($id);
-        $success = true;
-        if (!$model->restore()) {
-            $success = false;
-        }
-        return compact('success', 'model');
-    }
-
-    public function restoreByIds(array $ids)
-    {
-        $models = $this->modelClass->query()->whereIn($this->modelClass->getPrimaryKey(), $ids);
-        $success = true;
-        $faileds = [];
-        $restored = [];
-        foreach ($models as $row) {
-            if (!$row->restore()) {
-                $success = false;
-                $faileds[] = $row->id;
-            } else {
-                $deleteds[] = $row->id;
-            }
-        }
-        return compact('success', 'restored', 'faileds');
-    }
-
     protected function buildQueryFilters($query, string|array $filter)
     {
         if (is_string($filter)) {
@@ -257,8 +108,26 @@ abstract class Services implements InterfaceServices
             foreach ($filter as $field => $item) {
                 if (is_array($item)) {
                     list($field, $condition, $value) = $item;
-                    if (is_array($value) && $condition == "in") {
-                        $query->whereIn($field, $value);
+                    if (is_array($value)) {
+                        if ($condition == "in") {
+                            $query->whereIn($field, $value);
+                        } elseif ($condition == "not in") {
+                            $query->whereNotIn($field, $value);
+                        }
+                    } elseif (is_array($value) && count($value) == 2) {
+                        if ($condition == 'between') {
+                            $query->whereBetween($field, $value);
+                        } elseif ($condition == 'not between') {
+                            $query->whereNotBetween($field, $value);
+                        }
+                    } else if (is_array($field)) {
+                        if (in_array($condition,['like','not like'])) {
+                            $query->where(function ($query) use ($field, $condition, $value) {
+                                foreach ($field as $row) {
+                                    $query->orWhere($row, $condition, '%' . $value . '%');
+                                }
+                            });
+                        }
                     } else {
                         $query->where($field, $condition, $value);
                     }

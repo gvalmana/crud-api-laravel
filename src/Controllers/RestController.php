@@ -70,7 +70,7 @@ class RestController extends BaseController
             if ($result['success']){
                 DB::commit();
             } else {
-                return $this->makeResponseUnprosesableEntity($result);
+                return $this->makeResponseUnprosesableEntity($result['errors']);
             }
         } catch (\Throwable $e) {
             DB::rollBack();
