@@ -12,7 +12,7 @@ use CrudApiRestfull\Resources\Messages;
  */
 trait HttpResponsable
 {
-    public function makeResponse(bool $success, string $message, int $status_code, $error = null)
+    public function makeResponse(bool $success, string $message= null, int $status_code, $data= null, $error = null)
     {
         $response['success'] = $success;
         $response['message'] = $message;
@@ -20,6 +20,9 @@ trait HttpResponsable
         if ($error != null) {
             $response['error'] = $error;
             $response['type'] = Messages::TYPE_ERROR;
+        }
+        if ($data != null) {
+            $response['data'] = $data;
         }
         return response()->json($response, $status_code);
     }

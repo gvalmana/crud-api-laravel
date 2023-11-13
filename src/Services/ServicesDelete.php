@@ -35,26 +35,26 @@ abstract class ServicesDelete implements InterfaceDeleteServices
     {
         $model = $this->modelClass->query()->findOrFail($id);
         $success = true;
-        if (!$this->modelClass->destroy($id))
+        if (!$this->modelClass->delete())
             $success = false;
         return compact('success', 'model');
     }
 
     public function destroyByIds(array $ids)
     {
-        $models = $this->modelClass->query()->whereIn($this->modelClass->getPrimaryKey(), $ids);
+        $models = $this->modelClass->query()->whereIn($this->modelClass->getPrimaryKey(), $ids)->get();
         $success = true;
-        $faileds = [];
-        $deleteds = [];
+        $failed = [];
+        $deleted = [];
         foreach ($models as $row) {
-            if (!$row->destroy()) {
+            if (!$row->delete()) {
                 $success = false;
-                $faileds[] = $row->id;
+                $faileds[] = $row;
             } else {
-                $deleteds[] = $row->id;
+                $deleted[] = $row;
             }
         }
-        return compact('success', 'deleteds', 'faileds');
+        return compact('success', 'deleted', 'failed');
     }
 
     public function restore($id)
@@ -69,18 +69,18 @@ abstract class ServicesDelete implements InterfaceDeleteServices
 
     public function restoreByIds(array $ids)
     {
-        $models = $this->modelClass->query()->whereIn($this->modelClass->getPrimaryKey(), $ids);
+        $models = $this->modelClass->query()->whereIn($this->modelClass->getPrimaryKey(), $ids)->withTrashed()->get();
         $success = true;
-        $faileds = [];
+        $failed = [];
         $restored = [];
         foreach ($models as $row) {
             if (!$row->restore()) {
                 $success = false;
-                $faileds[] = $row->id;
+                $faileds[] = $row;
             } else {
-                $deleteds[] = $row->id;
+                $restored[] = $row;
             }
         }
-        return compact('success', 'restored', 'faileds');
+        return compact('success', 'restored', 'failed');
     }
 }
