@@ -60,7 +60,6 @@ abstract class ServicesCreateOrUpdate implements InterfaceUpdateOrCreateServices
         $this->initializeModel($attributes, $scenario);
 
         $validateResult = $this->selfValidate($attributes, $this->modelClass->getScenario());
-
         if (!$validateResult['success']) {
             $success = false;
             $errors = $validateResult['errors'];
@@ -78,18 +77,17 @@ abstract class ServicesCreateOrUpdate implements InterfaceUpdateOrCreateServices
     {
         $success = true;
         $models = [];
-
-        foreach ($attributes as $data) {
+        $errors = [];
+        foreach ($attributes as $key=>$data) {
             $result = $this->save($data, $scenario);
-
             if (!$result['success']) {
                 $success = false;
+                $errors[$key][] = $result['errors'];
             }
-
             $models['models'][] = $result['model'];
         }
 
-        return compact('success', 'models');
+        return compact('success', 'models', 'errors');
     }
 
     public function update($id, array $attributes)

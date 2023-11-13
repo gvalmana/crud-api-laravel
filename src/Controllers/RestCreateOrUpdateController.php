@@ -56,7 +56,7 @@ class RestCreateOrUpdateController extends BaseController
                 return $this->makeResponseCreated($response, $this->created_message);
             } else {
                 DB::rollBack();
-                return $this->makeResponseUnprocessableEntity($result['errors']);
+                return $this->makeResponseUnprosesableEntity($result['errors']);
             }
         } catch (Exception $e) {
             DB::rollBack();
