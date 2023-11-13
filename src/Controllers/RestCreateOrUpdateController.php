@@ -83,9 +83,9 @@ class RestCreateOrUpdateController extends BaseController
     private function getResponseData($result)
     {
         if (isset($result['model'])) {
-            return $result['model'];
+            return $this->apiResource::make($result['model']);
         } elseif (isset($result['models'])) {
-            return $result['models'];
+            return $this->apiResource::collection($result['models']);
         } else {
             return [];
         }
