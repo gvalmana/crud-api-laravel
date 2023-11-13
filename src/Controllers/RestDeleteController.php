@@ -47,19 +47,7 @@ class RestDeleteController extends BaseController
                 return $this->makeResponseNotFound($this->not_found_message);
             }
         }
-        return $this->makeResponseOK($result['model'], $this->deleted_message);
-    }
-
-    public function restore($id)
-    {
-        try {
-            $result = $this->service->restore($id);
-        } catch (\Throwable $exception) {
-            if ($exception instanceof ModelNotFoundException) {
-                return $this->makeResponseNotFound($this->not_found_message);
-            }
-        }
-        return $this->makeResponseOK($result, $this->restored_message);
+        return $this->makeResponseOK($this->apiResource::make($result['model']), $this->deleted_message);
     }
 
     public function destroyByIds(Request $request)
@@ -77,8 +65,22 @@ class RestDeleteController extends BaseController
         }
         $success = $result['success'];
         unset($result["success"]);
-        return $this->makeResponse($success, $this->deleted_message, Response::HTTP_OK, $result);
+        $data = $this->apiResource::collection($result['models']);
+        return $this->makeResponse($success, $this->deleted_message, Response::HTTP_OK, $data);
     }
+
+    public function restore($id)
+    {
+        try {
+            $result = $this->service->restore($id);
+        } catch (\Throwable $exception) {
+            if ($exception instanceof ModelNotFoundException) {
+                return $this->makeResponseNotFound($this->not_found_message);
+            }
+        }
+        return $this->makeResponseOK($this->apiResource::make($result['model']), $this->restored_message);
+    }
+
     public function restoreByIds(Request $request)
     {
         DB::beginTransaction();
@@ -94,6 +96,7 @@ class RestDeleteController extends BaseController
         }
         $success = $result['success'];
         unset($result["success"]);
-        return $this->makeResponse($success, $this->restored_message, Response::HTTP_OK, $result);
+        $data = $this->apiResource::collection($result['models']);
+        return $this->makeResponse($success, $this->restored_message, Response::HTTP_OK, $data);
     }
 }

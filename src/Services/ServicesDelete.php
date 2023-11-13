@@ -42,19 +42,14 @@ abstract class ServicesDelete implements InterfaceDeleteServices
 
     public function destroyByIds(array $ids)
     {
-        $models = $this->modelClass->query()->whereIn($this->modelClass->getPrimaryKey(), $ids)->get();
+        $items = $this->modelClass->query()->whereIn($this->modelClass->getPrimaryKey(), $ids)->get();
         $success = true;
-        $failed = [];
-        $deleted = [];
-        foreach ($models as $row) {
-            if (!$row->delete()) {
-                $success = false;
-                $faileds[] = $row;
-            } else {
-                $deleted[] = $row;
-            }
+        $models = [];
+        foreach ($items as $row) {
+            $success = $row->delete();
+            $models[] = $row;
         }
-        return compact('success', 'deleted', 'failed');
+        return compact('success', 'models');
     }
 
     public function restore($id)
@@ -69,18 +64,13 @@ abstract class ServicesDelete implements InterfaceDeleteServices
 
     public function restoreByIds(array $ids)
     {
-        $models = $this->modelClass->query()->whereIn($this->modelClass->getPrimaryKey(), $ids)->withTrashed()->get();
+        $items = $this->modelClass->query()->whereIn($this->modelClass->getPrimaryKey(), $ids)->withTrashed()->get();
         $success = true;
-        $failed = [];
-        $restored = [];
-        foreach ($models as $row) {
-            if (!$row->restore()) {
-                $success = false;
-                $faileds[] = $row;
-            } else {
-                $restored[] = $row;
-            }
+        $models = [];
+        foreach ($items as $row) {
+            $success = $row->restore();
+            $models[] = $row;
         }
-        return compact('success', 'restored', 'failed');
+        return compact('success', 'models');
     }
 }
