@@ -30,7 +30,7 @@ trait ParamsProcessTrait
             'select' => $request->input('select', null),
             'pagination' => $request->input('pagination', null),
             'orderBy' => $request->input('orderBy', $this->orderBy),
-            'deleted' => $request->input('deletd', false),
+            'deleted' => $request->input('deleted', false),
         ];
         return $defaultParams;
     }
