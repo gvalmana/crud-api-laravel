@@ -10,50 +10,49 @@ use Illuminate\Http\Request;
 trait ParamsProcessTrait
 {
 
-    public $pagination = 20;
-    public $page = 1;
+    public $pagination = ["pageSize" => 15, "page" => 1];
     public $filter = [];
-    public $orderBy = 'id';
-    public $direction = 'ASC';
+    public $orderBy = [["id" => "ASC"]];
     public $parameters = [];
+    public $select = ['*'];
 
-    protected function processParams(Request $request): void
+    protected function processParams(Request $request): array
     {
-        if (isset($request->paginate)) {
-            $this->pagination = $request->input('paginate', 20);
-        } elseif (isset($request->pagination)) {
-            $this->pagination = $request->input('pagination', 20);
-        } elseif (isset($request->limit)) {
-            $this->pagination = $request->input('limit', 20);
-        }
-
-        $this->page = $request->input('page', 1);
         if (gettype($request->input('filter')) == 'string') {
             $this->filter = $request->input('filter') ? json_decode($request->input('filter')) : [];
         } else {
             $this->filter = $request->input('filter') ? $request->input('filter') : [];
         }
-
-        $this->filter = is_array($this->filter) ? $this->filter : [];
-
-        $this->orderBy = $request->input('orderBy', 'created_at');
-        $this->direction = $request->input('direction', 'ASC');
+        $defaultParams = [
+            'relations' => $request->input('relations', null),
+            'attr' => $request->input('attr', null),
+            'filter' => $this->filter,
+            'select' => $request->input('select', null),
+            'pagination' => $request->input('pagination', null),
+            'orderBy' => $request->input('orderBy', $this->orderBy),
+            'deleted' => $request->input('deleted', false),
+            'oper' => $request->input('oper', null)
+        ];
+        return $defaultParams;
     }
 
     protected function processRequest(Request $request): array
     {
+        if (gettype($request->input('filter')) == 'string') {
+            $this->filter = $request->input('filter') ? json_decode($request->input('filter')) : [];
+        } else {
+            $this->filter = $request->input('filter') ? $request->input('filter') : [];
+        }
         $defaultParams = [
-            'relations' => null,
-            'attr' => null,
-            'filter' => [],
-            'select' => '*',
-            'pagination' => $this->pagination,
-            'page' => $this->page,
-            'orderBy' => $this->orderBy,
-            'direction' => $this->direction,
-            'deleted' => false,
+            'relations' => $request->input('relations', null),
+            'attr' => $request->input('attr', null),
+            'filter' => $this->filter,
+            'select' => $request->input('select', null),
+            'pagination' => $request->input('pagination', null),
+            'orderBy' => $request->input('orderBy', null),
+            'deleted' => $request->input('deletd', false),
         ];
-        return array_merge($defaultParams, $request->only(array_keys($defaultParams)));
+        return $defaultParams;
     }
 
     protected function addFilter($key, $value, $operator = '='): void
@@ -61,7 +60,7 @@ trait ParamsProcessTrait
         $this->filter[] = compact('key', 'operator', 'value');
     }
 
-    public function replaceFiltersAlias(array $alias)
+    public function replaceFiltersAlias(array $alias): void
     {
         $replaces = [];
         foreach ($this->filter as $field => $value) {
@@ -123,7 +122,7 @@ trait ParamsProcessTrait
         return false;
     }
 
-    public function filterTransformValues($transformers)
+    public function filterTransformValues($transformers): void
     {
         foreach ($this->filter as $filter => &$val) {
             if (is_array($val)) {
@@ -137,7 +136,7 @@ trait ParamsProcessTrait
         }
     }
 
-    protected function setOrderByTablePrefix(string $prefix)
+    protected function setOrderByTablePrefix(string $prefix): void
     {
         $this->orderBy = "$prefix.$this->orderBy";
     }
