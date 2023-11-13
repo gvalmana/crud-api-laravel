@@ -1,5 +1,5 @@
 <?php
-namespace CrudApiRestfull\Models;
+namespace CrudApiRestfull\Contracts;
 
 interface RestModelInterface
 {
