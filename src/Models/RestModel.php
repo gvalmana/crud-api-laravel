@@ -4,12 +4,10 @@ namespace CrudApiRestfull\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Foundation\Validation\ValidatesRequests;
-use Illuminate\Pagination\Paginator;
+use Illuminate\Support\Facades\Validator;
 
 class RestModel extends Model
 {
-    use ValidatesRequests;
-
     /**
      * @param array $parameters
      * @return mixed
@@ -82,9 +80,12 @@ class RestModel extends Model
         }
         if ($specific) {
             $rules = array_intersect_key($rules, $this->attributes);
+        } else {
+            $rules = $this->rules[$scenario];
         }
-        $valid = $this->getValidationFactory()->make($this->attributes, $rules);
-        return ["success" => !$valid->fails(), "errors" => $valid->errors()->getMessages(), 'model' => get_called_class()];
+        $validator = Validator::make($this->attributes, $rules);
+        $response = ["success" => !$validator->fails(), "errors" => $validator->errors(), 'model' => get_called_class()];
+        return $response;
     }
 
     public function validateAll(array $attributes, $scenario = 'create', $specific = false)
