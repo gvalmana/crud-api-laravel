@@ -99,7 +99,6 @@ abstract class Services implements InterfaceServices
         $success = true;
         $validate_all = $this->selfValidate($attributes, $this->modelClass->getScenario());
         if (!$validate_all['success'])
-            dd($validate_all);
             $success = false;
             $errors = $validate_all['errors'];
             $model = $validate_all['model'];
