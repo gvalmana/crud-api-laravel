@@ -12,8 +12,9 @@ class RestModel extends Model
      * @param array $parameters
      * @return mixed
      */
-    protected $scenario = "create";
-
+    public const CREATE_SCENARIO = 'create';
+    public const UPDATE_SCENARIO = 'update';
+    protected $scenario = self::CREATE_SCENARIO;
     /**
      * /**
      * The name of the model name parameters
@@ -74,7 +75,7 @@ class RestModel extends Model
 
     public function selfValidate($scenario = 'create', $specific = false, $validate_pk = true)
     {
-        $rules = $this->rules($scenario);
+        $rules = $this->rules[$scenario];
         if (!$validate_pk) {
             unset($rules[$this->getPrimaryKey()]);
         }
@@ -84,7 +85,16 @@ class RestModel extends Model
             $rules = $this->rules[$scenario];
         }
         $validator = Validator::make($this->attributes, $rules);
-        $response = ["success" => !$validator->fails(), "errors" => $validator->errors(), 'model' => get_called_class()];
+        if ($validator->fails()) {
+            $success = false;
+            $errors = $validator->errors();
+            $model = get_called_class();
+        } else {
+            $success = true;
+            $errors = null;
+            $model = $this;
+        }
+        $response = compact('success', 'errors', 'model');
         return $response;
     }
 

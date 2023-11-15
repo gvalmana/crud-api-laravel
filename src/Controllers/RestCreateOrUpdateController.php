@@ -69,15 +69,21 @@ class RestCreateOrUpdateController extends BaseController
         DB::beginTransaction();
         try {
             $params = $request->all();
-            $result = $this->service->update($params, $id);
-            DB::commit();
-        } catch (\Throwable $exception) {
+            $result = $this->service->update($id, $params);
+            if ($result['success']) {
+                DB::commit();
+                return $this->makeResponseOK($this->apiResource::make($result['model']), $this->updated_message);
+            } else {
+                DB::rollBack();
+                return $this->makeResponseUnprosesableEntity($result['errors']);
+            }
+        } catch (\Throwable $ex) {
             DB::rollBack();
-            if ($exception instanceof ModelNotFoundException) {
+            if ($ex instanceof ModelNotFoundException) {
                 return $this->makeResponseNotFound($this->not_found_message);
             }
+            return $this->makeResponseException($ex);
         }
-        return $this->makeResponseOK($result, $this->updated_message);
     }
 
     private function getResponseData($result)

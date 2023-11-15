@@ -58,7 +58,6 @@ abstract class ServicesCreateOrUpdate implements InterfaceUpdateOrCreateServices
         $model = null;
         $errors = null;
         $this->initializeModel($attributes, $scenario);
-
         $validateResult = $this->selfValidate($attributes, $this->modelClass->getScenario());
         if (!$validateResult['success']) {
             $success = false;
@@ -93,21 +92,22 @@ abstract class ServicesCreateOrUpdate implements InterfaceUpdateOrCreateServices
     public function update($id, array $attributes)
     {
         $success = true;
-        $errors = [];
-        $this->modelClass = $this->modelClass->query()->findOrFail($id);
-        $this->modelClass->setScenario("update");
+        $model = null;
+        $errors = null;
+        $this->modelClass = $this->modelClass::findOrFail($id);
+        $this->modelClass->setScenario(RestModel::UPDATE_SCENARIO);
         $specific = isset($attributes["_specific"]) ? $attributes["_specific"] : false;
-        $valid = $this->modelClass->self_validate($this->modelClass->getScenario(), $specific);
-        if (!$valid['success']) {
-            $success = false;
-            array_push($errors, $valid);
-            return compact($success, $errors);
+        $validation = $this->selfValidate($attributes, $this->modelClass->getScenario(), $specific);
+        if (!$validation['success']) {
+            $success = $validation['success'];
+            $errors = $validation['errors'];
+            $model = $validation['model'];
+            return compact('success', 'errors', 'model');
         } else {
-            $this->modelClass->fill($attributes);
             $this->modelClass->save();
             $model = $this->modelClass;
         }
-        return compact('success', 'model');
+        return compact('success', 'errors','model');
     }
 
     public function updateMultiple(array $params)
@@ -129,7 +129,7 @@ abstract class ServicesCreateOrUpdate implements InterfaceUpdateOrCreateServices
     {
         if (isset($attributes[$this->modelClass->getPrimaryKey()])) {
             $this->modelClass = $this->modelClass::find($attributes[$this->modelClass->getPrimaryKey()]);
-            $this->modelClass->setScenario('update');
+            $this->modelClass->setScenario(RestModel::UPDATE_SCENARIO);
         } else {
             $this->modelClass = new $this->modelClass;
         }
