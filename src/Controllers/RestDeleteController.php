@@ -1,7 +1,7 @@
 <?php
 namespace CrudApiRestfull\Controllers;
 
-use CrudApiRestfull\Contracts\InterfaceDeleteServices;
+use CrudApiRestfull\Contracts\InterfaceDeleteRepository;
 use CrudApiRestfull\Traits\HttpResponsable;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
@@ -27,9 +27,9 @@ class RestDeleteController extends BaseController
     public Model $modelClass;
 
     /**
-     * @var InterfaceDeleteServices $service
+     * @var InterfaceDeleteRepository $repository
      */
-    public InterfaceDeleteServices $service;
+    public InterfaceDeleteRepository $repository;
     public $apiResource;
     public $not_found_message = Messages::NOT_FOUND_MESSAGE;
     public $restored_message = Messages::RESTORED_MESSAGE;
@@ -39,7 +39,7 @@ class RestDeleteController extends BaseController
     {
         DB::beginTransaction();
         try {
-            $result = $this->service->destroy($id);
+            $result = $this->repository->destroy($id);
             DB::commit();
         } catch (\Throwable $exception) {
             DB::rollBack();
@@ -56,7 +56,7 @@ class RestDeleteController extends BaseController
         try {
             $ids =  $request->input('ids',null);
             if ($ids) {
-                $result = $this->service->destroyByIds($ids);
+                $result = $this->repository->destroyByIds($ids);
             }
             DB::commit();
         } catch (Exception $ex) {
@@ -72,7 +72,7 @@ class RestDeleteController extends BaseController
     public function restore($id)
     {
         try {
-            $result = $this->service->restore($id);
+            $result = $this->repository->restore($id);
         } catch (\Throwable $exception) {
             if ($exception instanceof ModelNotFoundException) {
                 return $this->makeResponseNotFound($this->not_found_message);
@@ -87,7 +87,7 @@ class RestDeleteController extends BaseController
         try {
             $ids =  $request->input('ids',null);
             if ($ids) {
-                $result = $this->service->restoreByIds($ids);
+                $result = $this->repository->restoreByIds($ids);
             }
             DB::commit();
         } catch (Exception $ex) {
