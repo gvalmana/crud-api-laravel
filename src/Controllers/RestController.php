@@ -9,11 +9,9 @@ use Illuminate\Foundation\Validation\ValidatesRequests;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Controller as BaseController;
 use Illuminate\Support\Facades\DB;
-use Psy\Util\Json;
-use Symfony\Component\HttpFoundation\Response;
 use CrudApiRestfull\Resources\Messages;
+use CrudApiRestfull\Services\BaseRepository;
 use Illuminate\Database\Eloquent\Model;
-use CrudApiRestfull\Services\Services;
 use CrudApiRestfull\Traits\PaginationTrait;
 use CrudApiRestfull\Traits\ParamsProcessTrait;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
@@ -28,14 +26,15 @@ class RestController extends BaseController
     public Model $modelClass;
 
     /**
-     * @var Services $service
+     * @var BaseRepository $repository
      */
-    public Services $service;
+    public BaseRepository $repository;
     public $apiResource;
     public $not_found_message = Messages::NOT_FOUND_MESSAGE;
     public $created_message = Messages::CREATED_SUCCESS_MESSAGE;
     public $updated_message = Messages::UPDATED_SUCCESS_MESSAGE;
-
+    public $deleted_message = Messages::DELETED_MESSAGE;
+    public $restored_message = Messages::RESTORED_MESSAGE;
     /**
      * Display a listing of the resource.
      * @return []
@@ -43,7 +42,7 @@ class RestController extends BaseController
     public function index(Request $request)
     {
         $params = $this->processParams($request);
-        $result = $this->service->listAll($params);
+        $result = $this->repository->listAll($params);
         $links = null;
         if ($result->count()==0) {
             return $this->makeResponseNoContent();
@@ -54,17 +53,12 @@ class RestController extends BaseController
         return $this->makeResponseList($this->apiResource::collection($result), $links);
     }
 
-    /**
-     * Display a listing of the resource.
-     * @return Json
-     */
-
     public function store(Request $request)
     {
         DB::beginTransaction();
         try {
             $params = $request->all();
-            $result = $this->service->create($params);
+            $result = $this->repository->create($params);
             if ($result['success']){
                 DB::commit();
             } else {
@@ -82,7 +76,7 @@ class RestController extends BaseController
         DB::beginTransaction();
         try {
             $params = $request->all();
-            $result = $this->service->update($params, $id);
+            $result = $this->repository->update($params, $id);
             DB::commit();
         } catch (\Throwable $exception) {
             DB::rollBack();
@@ -97,7 +91,7 @@ class RestController extends BaseController
     {
         try {
             $params = $this->processParams($request);
-            $result = $this->service->show($id, $params);
+            $result = $this->repository->show($id, $params);
             return $this->makeResponseOK($this->apiResource::make($result));
         } catch (NotFoundHttpException $ex) {
             return $this->makeResponseNotFound();
@@ -111,7 +105,7 @@ class RestController extends BaseController
     {
         DB::beginTransaction();
         try {
-            $result = $this->service->destroy($id);
+            $result = $this->repository->destroy($id);
             DB::commit();
         } catch (\Throwable $exception) {
             DB::rollBack();
@@ -125,7 +119,7 @@ class RestController extends BaseController
     public function select2list(Request $request)
     {
         $params = $this->processParams($request);
-        $result = $this->service->select2List($params);
+        $result = $this->repository->select2List($params);
         if (count($result)==0) {
             return $this->makeResponseNoContent();
         }
@@ -135,7 +129,7 @@ class RestController extends BaseController
     public function restore(Request $request, $id)
     {
         try {
-            $result = $this->service->restore($id);
+            $result = $this->repository->restore($id);
         } catch (\Throwable $exception) {
             if ($exception instanceof ModelNotFoundException) {
                 return $this->makeResponseNotFound($this->not_found_message);
@@ -149,7 +143,7 @@ class RestController extends BaseController
         DB::beginTransaction();
         try {
             $params = $request->all();
-            $result = $this->service->updateMultiple($params);
+            $result = $this->repository->updateMultiple($params);
             if ($result['success'])
                 DB::commit();
         } catch (\Throwable $e) {
@@ -164,7 +158,7 @@ class RestController extends BaseController
         $params = $request->request->all();
         $scenario = isset($params["_scenario"]) ? $params["_scenario"] : "create";
         $specific = isset($params["_specific"]) ? $params["_specific"] : false;
-        $response = $this->service->selfValidate($params, $scenario, $specific);
+        $response = $this->repository->selfValidate($params, $scenario, $specific);
         if (!$response['success']) {
             return $this->makeResponseUnprosesableEntity($response['errors']);
         }

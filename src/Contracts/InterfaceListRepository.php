@@ -2,7 +2,7 @@
 
 namespace CrudApiRestfull\Contracts;
 
-interface InterfaceListServices
+interface InterfaceListRepository
 {
     public function show(string|int $id, array $params);
     public function select2List(array $params);

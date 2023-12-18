@@ -2,7 +2,7 @@
 
 namespace CrudApiRestfull\Contracts;
 
-interface InterfaceUpdateOrCreateServices
+interface InterfaceUpdateOrCreateRepository
 {
     public function selfValidate(array $attributes, $scenario = 'create', $specific = false);
     public function save(array $attributes, string $scenario = 'create');

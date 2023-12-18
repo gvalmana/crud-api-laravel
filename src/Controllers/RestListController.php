@@ -1,7 +1,10 @@
 <?php
+
 namespace CrudApiRestfull\Controllers;
 
+use CrudApiRestfull\Contracts\InterfaceListRepository;
 use CrudApiRestfull\Contracts\InterfaceListServices;
+use CrudApiRestfull\Repositories\ListRepository;
 use CrudApiRestfull\Traits\HttpResponsable;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
@@ -9,12 +12,8 @@ use Illuminate\Foundation\Bus\DispatchesJobs;
 use Illuminate\Foundation\Validation\ValidatesRequests;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Controller as BaseController;
-use Illuminate\Support\Facades\DB;
-use Psy\Util\Json;
-use Symfony\Component\HttpFoundation\Response;
 use CrudApiRestfull\Resources\Messages;
 use Illuminate\Database\Eloquent\Model;
-use CrudApiRestfull\Services\Services;
 use CrudApiRestfull\Services\ServicesList;
 use CrudApiRestfull\Traits\PaginationTrait;
 use CrudApiRestfull\Traits\ParamsProcessTrait;
@@ -30,9 +29,9 @@ class RestListController extends BaseController
     public Model $modelClass;
 
     /**
-     * @var ServicesList $service
+     * @var InterfaceListRepository $repository
      */
-    public ServicesList $service;
+    public ListRepository $repository;
     public $apiResource;
     public $not_found_message = Messages::NOT_FOUND_MESSAGE;
     public $created_message = Messages::CREATED_SUCCESS_MESSAGE;
@@ -40,9 +39,9 @@ class RestListController extends BaseController
     public $restored_message = Messages::RESTORED_MESSAGE;
     public $deleted_message = Messages::DELETED_MESSAGE;
 
-    public function __construct(InterfaceListServices $service)
+    public function __construct(InterfaceListRepository $repository)
     {
-        $this->service =  $service;
+        $this->repository =  $repository;
     }
 
     /**
@@ -52,38 +51,38 @@ class RestListController extends BaseController
     public function index(Request $request)
     {
         $params = $this->processParams($request);
-        $result = $this->service->listAll($params);
-        $links = null;
-        if ($result->count()==0) {
+        $result = $this->repository->listAll($params);
+
+        if ($result->isEmpty()) {
             return $this->makeResponseNoContent();
         }
-        if (isset($request["pagination"])) {
+
+        $links = null;
+
+        if ($request->has("pagination")) {
             $links = $this->makeMetaData($result);
         }
+
         return $this->makeResponseList($this->apiResource::collection($result), $links);
     }
 
     public function show(Request $request, $id)
     {
+        $params = $this->processParams($request);
+
         try {
-            $params = $this->processParams($request);
-            $result = $this->service->show($id, $params);
+            $result = $this->repository->show($id, $params);
             return $this->makeResponseOK($this->apiResource::make($result));
-        } catch (NotFoundHttpException $ex) {
-            return $this->makeResponseNotFound();
-        } catch (ModelNotFoundException $ex) {
+        } catch (NotFoundHttpException | ModelNotFoundException $ex) {
             return $this->makeResponseNotFound();
         }
-
     }
 
     public function select2list(Request $request)
     {
         $params = $this->processParams($request);
-        $result = $this->service->select2List($params);
-        if (count($result)==0) {
-            return $this->makeResponseNoContent();
-        }
-        return $this->makeResponseOK($result);
+        $result = $this->repository->select2List($params);
+
+        return count($result) == 0 ? $this->makeResponseNoContent() : $this->makeResponseOK($result);
     }
 }

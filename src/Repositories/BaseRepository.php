@@ -2,7 +2,7 @@
 
 namespace CrudApiRestfull\Services;
 
-use CrudApiRestfull\Contracts\InterfaceServices;
+use CrudApiRestfull\Contracts\InterfaceRepository;
 use CrudApiRestfull\Models\RestModel;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Pagination\Paginator;
@@ -11,7 +11,7 @@ use Illuminate\Support\Facades\Log;
 /**
  * @property Model $modelClass
  */
-abstract class Services implements InterfaceServices
+abstract class BaseRepository implements InterfaceRepository
 {
 
     /**

@@ -1,7 +1,8 @@
 <?php
+
 namespace CrudApiRestfull\Controllers;
 
-use CrudApiRestfull\Contracts\InterfaceDeleteServices;
+use CrudApiRestfull\Contracts\InterfaceDeleteRepository;
 use CrudApiRestfull\Traits\HttpResponsable;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
@@ -27,9 +28,9 @@ class RestDeleteController extends BaseController
     public Model $modelClass;
 
     /**
-     * @var InterfaceDeleteServices $service
+     * @var InterfaceDeleteRepository $repository
      */
-    public InterfaceDeleteServices $service;
+    public InterfaceDeleteRepository $repository;
     public $apiResource;
     public $not_found_message = Messages::NOT_FOUND_MESSAGE;
     public $restored_message = Messages::RESTORED_MESSAGE;
@@ -37,26 +38,31 @@ class RestDeleteController extends BaseController
 
     public function destroy($id)
     {
-        DB::beginTransaction();
         try {
-            $result = $this->service->destroy($id);
+            DB::beginTransaction();
+            $result = $this->repository->destroy($id);
             DB::commit();
+
+            return $this->makeResponseOK(
+                $this->apiResource::make($result['model']),
+                $this->deleted_message
+            );
         } catch (\Throwable $exception) {
             DB::rollBack();
             if ($exception instanceof ModelNotFoundException) {
                 return $this->makeResponseNotFound($this->not_found_message);
             }
         }
-        return $this->makeResponseOK($this->apiResource::make($result['model']), $this->deleted_message);
     }
 
     public function destroyByIds(Request $request)
     {
-        DB::beginTransaction();
+
         try {
-            $ids =  $request->input('ids',null);
+            DB::beginTransaction();
+            $ids =  $request->input('ids', null);
             if ($ids) {
-                $result = $this->service->destroyByIds($ids);
+                $result = $this->repository->destroyByIds($ids);
             }
             DB::commit();
         } catch (Exception $ex) {
@@ -72,31 +78,35 @@ class RestDeleteController extends BaseController
     public function restore($id)
     {
         try {
-            $result = $this->service->restore($id);
+            $result = $this->repository->restore($id);
         } catch (\Throwable $exception) {
             if ($exception instanceof ModelNotFoundException) {
                 return $this->makeResponseNotFound($this->not_found_message);
             }
         }
-        return $this->makeResponseOK($this->apiResource::make($result['model']), $this->restored_message);
+
+        $model = $this->apiResource::make($result['model']);
+        return $this->makeResponseOK($model, $this->restored_message);
     }
 
     public function restoreByIds(Request $request)
     {
-        DB::beginTransaction();
+        $ids =  $request->input('ids', null);
+        if (!$ids) {
+            return $this->makeResponse(false, $this->restored_message, Response::HTTP_OK, []);
+        }
+
         try {
-            $ids =  $request->input('ids',null);
-            if ($ids) {
-                $result = $this->service->restoreByIds($ids);
-            }
+            DB::beginTransaction();
+            $result = $this->repository->restoreByIds($ids);
             DB::commit();
         } catch (Exception $ex) {
             DB::rollBack();
             return $this->makeResponseException($ex);
         }
-        $success = $result['success'];
-        unset($result["success"]);
+
+        unset($result['success']);
         $data = $this->apiResource::collection($result['models']);
-        return $this->makeResponse($success, $this->restored_message, Response::HTTP_OK, $data);
+        return $this->makeResponse($result['success'], $this->restored_message, Response::HTTP_OK, $data);
     }
 }
