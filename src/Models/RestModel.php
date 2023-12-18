@@ -76,64 +76,59 @@ class RestModel extends Model
     public function selfValidate($scenario = 'create', $specific = false, $validate_pk = true)
     {
         $rules = $this->rules[$scenario];
-
         if (!$validate_pk) {
             unset($rules[$this->getPrimaryKey()]);
         }
-
         if ($specific) {
             $rules = array_intersect_key($rules, $this->attributes);
+        } else {
+            $rules = $this->rules[$scenario];
         }
-
         $validator = Validator::make($this->attributes, $rules);
-
-        return [
-            'success' => $validator->passes(),
-            'errors' => $validator->fails() ? $validator->errors() : null,
-            'model' => $validator->fails() ? get_called_class() : $this
-        ];
+        if ($validator->fails()) {
+            $success = false;
+            $errors = $validator->errors();
+            $model = get_called_class();
+        } else {
+            $success = true;
+            $errors = null;
+            $model = $this;
+        }
+        $response = compact('success', 'errors', 'model');
+        return $response;
     }
 
     public function validateAll(array $attributes, $scenario = 'create', $specific = false)
     {
-        if (isset($attributes[$this->getPrimaryKey()]) && $scenario == 'create') {
+        $validate = [];
+        if (isset($attributes[$this->getPrimaryKey()]) && $scenario == 'create')
             $scenario = "update";
-        }
-
         $this->setScenario($scenario);
-
         if (count(self::PARENT) > 0) {
             $parent_class = self::PARENT['class'];
-
             if (!isset($attributes[$this->getPrimaryKey()])) {
                 $parent = new $parent_class();
             } else {
                 $parent = $parent_class::find($attributes[$this->getPrimaryKey()]);
             }
-
             if (!$parent) {
-                return ["success" => false, 'error' => "Element not found", "model" => $parent_class];
+                $result = ["success" => false, 'error' => "Element not found", "model" => $parent_class];
+                return $result;
             }
-
             $validateparents = $this->parents_validate($attributes, $this->getScenario(), $specific);
-
-            if ($validateparents) {
+            if ($validateparents)
                 $validate[] = $validateparents;
-            }
         }
-
         $this->fill($attributes);
-
         $valid = $this->self_validate($this->getScenario(), $specific, false);
-
-        if ($valid['success'] && empty($validate)) {
-            return ["success" => true, 'error' => []];
+        if ($valid['success'] && count($validate) == 0) {
+            $result = ["success" => true, 'error' => []];
         } else {
-            if (!$valid['success']) {
+            if (!$valid['success'])
                 array_push($validate, $valid);
-            }
-            return ["success" => false, "errors" => $validate];
+            $result = ["success" => false, "errors" => $validate];
         }
+        return $result;
     }
 
     public function getPrincipalAttribute()
