@@ -1,9 +1,8 @@
 <?php
 
-namespace CrudApiRestfull\Services;
+namespace CrudApiRestfull\Repositories;
 
-use CrudApiRestfull\Contracts\InterfaceDeleteServices;
-use CrudApiRestfull\Contracts\InterfaceServices;
+use CrudApiRestfull\Contracts\InterfaceDeleteRepository;
 use CrudApiRestfull\Models\RestModel;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Pagination\Paginator;
@@ -12,7 +11,7 @@ use Illuminate\Support\Facades\Log;
 /**
  * @property Model $modelClass
  */
-abstract class ServicesDelete implements InterfaceDeleteServices
+abstract class DeleteRepository implements InterfaceDeleteRepository
 {
 
     /**

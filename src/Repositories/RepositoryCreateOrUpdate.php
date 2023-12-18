@@ -1,8 +1,8 @@
 <?php
 
-namespace CrudApiRestfull\Services;
+namespace CrudApiRestfull\Repositories;
 
-use CrudApiRestfull\Contracts\InterfaceUpdateOrCreateServices;
+use CrudApiRestfull\Contracts\InterfaceUpdateOrCreateRepository;
 use CrudApiRestfull\Models\RestModel;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Log;
@@ -10,7 +10,7 @@ use Illuminate\Support\Facades\Log;
 /**
  * @property Model $modelClass
  */
-abstract class ServicesCreateOrUpdate implements InterfaceUpdateOrCreateServices
+abstract class CreateOrUpdateRepository implements InterfaceUpdateOrCreateRepository
 {
 
     /**
