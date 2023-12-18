@@ -37,14 +37,16 @@ class RestCreateOrUpdateController extends BaseController
 
     public function store(Request $request)
     {
+        DB::beginTransaction();
         try {
-            DB::beginTransaction();
             $params = $request->all();
             $result = $this->repository->create($params);
             if ($result['success']) {
                 DB::commit();
-                $response = $this->getResponseData($result);
-                return $this->makeResponseCreated($response, $this->created_message);
+                return $this->makeResponseCreated(
+                    $this->getResponseData($result),
+                    $this->created_message
+                );
             }
             DB::rollBack();
             return $this->makeResponseUnprosesableEntity($result['errors']);
@@ -56,33 +58,40 @@ class RestCreateOrUpdateController extends BaseController
 
     public function update(Request $request, $id)
     {
-
         try {
             DB::beginTransaction();
             $params = $request->all();
             $result = $this->repository->update($id, $params);
+
             if ($result['success']) {
                 DB::commit();
-                return $this->makeResponseOK($this->apiResource::make($result['model']), $this->updated_message);
-            } else {
-                DB::rollBack();
-                return $this->makeResponseUnprosesableEntity($result['errors']);
+                return $this->makeResponseOK(
+                    $this->apiResource::make($result['model']),
+                    $this->updated_message
+                );
             }
+
+            DB::rollBack();
+            return $this->makeResponseUnprosesableEntity($result['errors']);
         } catch (\Throwable $ex) {
             DB::rollBack();
+
             if ($ex instanceof ModelNotFoundException) {
                 return $this->makeResponseNotFound($this->not_found_message);
             }
+
             return $this->makeResponseException($ex);
         }
     }
 
     private function getResponseData($result)
     {
-        return isset($result['model'])
-            ? $this->apiResource::make($result['model'])
-            : (isset($result['models'])
-                ? $this->apiResource::collection($result['models'])
-                : []);
+        if (isset($result['model'])) {
+            return $this->apiResource::make($result['model']);
+        } elseif (isset($result['models'])) {
+            return $this->apiResource::collection($result['models']);
+        } else {
+            return [];
+        }
     }
 }
