@@ -1,4 +1,5 @@
 <?php
+
 namespace CrudApiRestfull\Controllers;
 
 use CrudApiRestfull\Contracts\InterfaceListRepository;
@@ -51,37 +52,37 @@ class RestListController extends BaseController
     {
         $params = $this->processParams($request);
         $result = $this->repository->listAll($params);
-        $links = null;
-        if ($result->count()==0) {
+
+        if ($result->isEmpty()) {
             return $this->makeResponseNoContent();
         }
-        if (isset($request["pagination"])) {
+
+        $links = null;
+
+        if ($request->has("pagination")) {
             $links = $this->makeMetaData($result);
         }
+
         return $this->makeResponseList($this->apiResource::collection($result), $links);
     }
 
     public function show(Request $request, $id)
     {
+        $params = $this->processParams($request);
+
         try {
-            $params = $this->processParams($request);
             $result = $this->repository->show($id, $params);
             return $this->makeResponseOK($this->apiResource::make($result));
-        } catch (NotFoundHttpException $ex) {
-            return $this->makeResponseNotFound();
-        } catch (ModelNotFoundException $ex) {
+        } catch (NotFoundHttpException | ModelNotFoundException $ex) {
             return $this->makeResponseNotFound();
         }
-
     }
 
     public function select2list(Request $request)
     {
         $params = $this->processParams($request);
         $result = $this->repository->select2List($params);
-        if (count($result)==0) {
-            return $this->makeResponseNoContent();
-        }
-        return $this->makeResponseOK($result);
+
+        return count($result) == 0 ? $this->makeResponseNoContent() : $this->makeResponseOK($result);
     }
 }
