@@ -37,18 +37,17 @@ class RestCreateOrUpdateController extends BaseController
 
     public function store(Request $request)
     {
-        DB::beginTransaction();
         try {
+            DB::beginTransaction();
             $params = $request->all();
             $result = $this->repository->create($params);
             if ($result['success']) {
                 DB::commit();
                 $response = $this->getResponseData($result);
                 return $this->makeResponseCreated($response, $this->created_message);
-            } else {
-                DB::rollBack();
-                return $this->makeResponseUnprosesableEntity($result['errors']);
             }
+            DB::rollBack();
+            return $this->makeResponseUnprosesableEntity($result['errors']);
         } catch (Exception $e) {
             DB::rollBack();
             return $this->makeResponseException($e);
@@ -57,8 +56,9 @@ class RestCreateOrUpdateController extends BaseController
 
     public function update(Request $request, $id)
     {
-        DB::beginTransaction();
+
         try {
+            DB::beginTransaction();
             $params = $request->all();
             $result = $this->repository->update($id, $params);
             if ($result['success']) {
@@ -79,12 +79,10 @@ class RestCreateOrUpdateController extends BaseController
 
     private function getResponseData($result)
     {
-        if (isset($result['model'])) {
-            return $this->apiResource::make($result['model']);
-        } elseif (isset($result['models'])) {
-            return $this->apiResource::collection($result['models']);
-        } else {
-            return [];
-        }
+        return isset($result['model'])
+            ? $this->apiResource::make($result['model'])
+            : (isset($result['models'])
+                ? $this->apiResource::collection($result['models'])
+                : []);
     }
 }
