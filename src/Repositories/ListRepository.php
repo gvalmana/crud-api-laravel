@@ -32,31 +32,18 @@ abstract class ListRepository implements InterfaceListRepository
     public function listAll(array $params)
     {
         $query = $this->modelClass->query();
-        if (isset($params["filter"])) {
-            $query = $this->buildQueryFilters($query, $params["filter"]);
-        }
-        if (isset($params["attr"])) {
-            $query = $this->eqAttr($query, $params['attr']);
-        }
-        if (isset($params['relations'])) {
-            $query = $this->relations($query, $params['relations']);
-        }
-        if (isset($params['select'])) {
-            $query = $query->select($params['select']);
-        }
-        if (isset($params['orderBy'])) {
-            $query = $this->orderBy($query, $params['orderBy']);
-        }
-        if (isset($params['oper'])) {
-            $query = $this->oper($query, $params['oper']);
-        }
 
-        if (isset($params['deleted'])) {
-            $query = $this->withDeleted($query, $params['deleted']);
-        }
+        $query = $this->buildQueryFilters($query, $params["filter"] ?? null);
+        $query = $this->eqAttr($query, $params['attr'] ?? null);
+        $query = $this->relations($query, $params['relations'] ?? null);
+        $query = $query->select($params['select'] ?? null);
+        $query = $this->orderBy($query, $params['orderBy'] ?? null);
+        $query = $this->oper($query, $params['oper'] ?? null);
+        $query = $this->withDeleted($query, $params['deleted'] ?? null);
 
-        if (isset($params['pagination']))
+        if (isset($params['pagination'])) {
             return $this->makePagination($query, $params['pagination']);
+        }
 
         return $query->get();
     }
@@ -64,36 +51,58 @@ abstract class ListRepository implements InterfaceListRepository
     public function show($id, array|string $params)
     {
         $query = $this->modelClass->query();
-        if (isset($params['relations'])) {
-            $query = $this->relations($query, $params['relations']);
-        }
-        if (isset($params['select'])) {
-            $query = $query->select($params['select']);
-        }
+
+        $query = $this->applyRelations($query, $params);
+        $query = $this->applySelect($query, $params);
+
         return $query->findOrFail($id);
+    }
+
+    private function applyRelations($query, $params)
+    {
+        if (isset($params['relations'])) {
+            return $this->relations($query, $params['relations']);
+        }
+        return $query;
+    }
+
+    private function applySelect($query, $params)
+    {
+        if (isset($params['select'])) {
+            return $query->select($params['select']);
+        }
+        return $query;
     }
 
     public function select2List($params)
     {
         $query = $this->modelClass->query();
-        $result = [];
+
         if (isset($params["filter"])) {
             $query = $this->buildQueryFilters($query, $params["filter"]);
         }
+
         if (isset($params["attr"])) {
             $query = $this->eqAttr($query, $params['attr']);
         }
+
         if (isset($params['orderBy'])) {
             $query = $this->orderBy($query, $params['orderBy']);
         }
+
         if (isset($params['oper'])) {
             $query = $this->oper($query, $params['oper']);
         }
+
         $data = $query->get();
-        foreach ($data as $key => $value) {
-            $result[$key]['option'] = $value[$this->modelClass->getPrincipalAttribute()];
-            $result[$key]['value'] = $value[$this->modelClass->getPrimaryKey()];
-        }
+
+        $result = $data->map(function ($value) {
+            return [
+                'option' => $value[$this->modelClass->getPrincipalAttribute()],
+                'value' => $value[$this->modelClass->getPrimaryKey()]
+            ];
+        })->all();
+
         return $result;
     }
 
@@ -103,9 +112,9 @@ abstract class ListRepository implements InterfaceListRepository
             $filter = json_decode($filter, true);
         }
         if (is_array($filter)) {
-            foreach ($filter as $field => $item) {
+            foreach ($filter as $item) {
                 if (is_array($item)) {
-                    list($field, $condition, $value) = $item;
+                    [$field, $condition, $value] = $item;
                     if (is_array($value)) {
                         if ($condition == "in") {
                             $query->whereIn($field, $value);
@@ -118,8 +127,8 @@ abstract class ListRepository implements InterfaceListRepository
                         } elseif ($condition == 'not between') {
                             $query->whereNotBetween($field, $value);
                         }
-                    } else if (is_array($field)) {
-                        if (in_array($condition,['like','not like'])) {
+                    } elseif (is_array($field)) {
+                        if (in_array($condition, ['like', 'not like'])) {
                             $query->where(function ($query) use ($field, $condition, $value) {
                                 foreach ($field as $row) {
                                     $query->orWhere($row, $condition, '%' . $value . '%');
@@ -134,97 +143,89 @@ abstract class ListRepository implements InterfaceListRepository
                 }
             }
         } else {
-            Log::warning("Query Filter recibed with errors");
+            Log::warning("Query Filter received with errors");
         }
         return $query;
     }
 
     protected function makePagination($query, string|array $pagination)
     {
-        if (is_string($pagination))
-            $pagination = json_decode($pagination, true);
-        $currentPage = isset($pagination["page"]) ? $pagination["page"] : 1;
-        $pageSize = isset($pagination["pageSize"]) ? $pagination["pageSize"] : $this->modelClass->perPage;
+        $pagination = is_string($pagination) ? json_decode($pagination, true) : $pagination;
+        $currentPage = $pagination["page"] ?? 1;
+        $pageSize = $pagination["pageSize"] ?? $this->modelClass->perPage;
         return $query->paginate($pageSize, ['*'], 'page', $currentPage);
     }
 
     protected function relations($query, array|string $params)
     {
-        if ($params == 'all' || array_search("all", $params) !== false)
+        if ($params === 'all' || in_array('all', (array)$params)) {
             $query = $query->with($this->modelClass::RELATIONS);
-        else
-            $query = $query->with($params);
+        } else {
+            $query = $query->with((array)$params);
+        }
         return $query;
     }
 
     protected function eqAttr($query, array|string $params)
     {
-        if (is_string($params)) {
-            $params = json_decode($params);
-        }
+        $params = is_string($params) ? json_decode($params) : $params;
+
         foreach ($params as $index => $value) {
-            if (is_array($value)) {
-                $query = $query->whereIn($index, $value);
-            } else
-                $query = $query->where($index, $value);
+            $query = is_array($value) ? $query->whereIn($index, $value) : $query->where($index, $value);
         }
+
         return $query;
     }
 
     protected function orderBy($query, array|string $params)
     {
-        foreach ($params as $elements) {
-            if (is_string($elements)) {
-                $elements = json_decode($elements, true);
-            }
-            foreach ($elements as $index => $value) {
-                $query = $query->orderBy($index, $value);
-            }
+        if (is_string($params)) {
+            $params = json_decode($params, true);
         }
+
+        foreach ($params as $index => $value) {
+            $query = $query->orderBy($index, $value);
+        }
+
         return $query;
     }
 
     protected function withDeleted($query, bool $params)
     {
-        if ($params == true) {
-            $query = $query->withTrashed();
-        }
-        return $query;
+        return $params ? $query->withTrashed() : $query;
     }
 
     protected function oper($query, $params, $condition = "and")
     {
-        if (is_string($params))
+        if (is_string($params)) {
             $params = json_decode($params, true);
+        }
+
         foreach ($params as $index => $parameter) {
-            if ($index === "or" || $index === "and")
+            if ($index === "or" || $index === "and") {
                 $condition = $index;
+            }
+
             $where = $condition == "and" ? "where" : "orWhere";
+
             if (!is_numeric($index) && (array_key_exists("or", $parameter) || array_key_exists("and", $parameter)) || ($index === "or" || $index === "and")) {
-                if (array_key_exists("or", $parameter))
+                if (array_key_exists("or", $parameter)) {
                     $query = $this->oper($query, $parameter['or'], "or");
-                elseif (array_key_exists("and", $parameter))
+                } elseif (array_key_exists("and", $parameter)) {
                     $query = $this->oper($query, $parameter['and'], "and");
-                elseif ($index === "or" || "and")
+                } elseif ($index === "or" || $index === "and") {
                     $query = $this->oper($query, $parameter, $index);
+                }
             } else {
                 if (is_array($parameter) || str_contains($parameter, '|')) {
-                    if (is_array($parameter))
+                    if (is_array($parameter)) {
                         $parameter = array_pop($parameter);
-                    $oper = $this->process_oper($parameter);
-                    if (array_search(strtolower("notbetween"), array_map('strtolower', $oper))) {
-                        $where = $where . "NotBetween";
-                    } elseif (array_search(strtolower("between"), array_map('strtolower', $oper))) {
-                        $where = $where . "Between";
-                    } elseif (array_search(strtolower("notin"), array_map('strtolower', $oper))) {
-                        $where = $where . "NotIn";
-                    } elseif (array_search(strtolower("in"), array_map('strtolower', $oper))) {
-                        $where = $where . "In";
-                    } elseif (array_search(strtolower("notnull"), array_map('strtolower', $oper))) {
-                        $where = $where . "NotNull";
-                    } elseif (array_search(strtolower("null"), array_map('strtolower', $oper))) {
-                        $where = $where . "Null";
                     }
+
+                    $oper = $this->process_oper($parameter);
+
+                    $where = $this->getWhereClause($where, $oper);
+
                     if (strpos($where, "etween") || strpos(strtolower($where), "in")) {
                         $oper[2] = [...$oper];
                         if (strpos(strtolower($where), "in")) {
@@ -234,14 +235,36 @@ abstract class ListRepository implements InterfaceListRepository
                         unset($oper[3]);
                         unset($oper[1]);
                     }
+
                     if (strpos(strtolower($where), "null")) {
                         $oper = [$oper[0]];
                     }
+
                     $query = $query->$where(...$oper);
                 }
             }
         }
+
         return $query;
+    }
+
+    private function getWhereClause($where, $oper)
+    {
+        if (array_search(strtolower("notbetween"), array_map('strtolower', $oper))) {
+            $where = $where . "NotBetween";
+        } elseif (array_search(strtolower("between"), array_map('strtolower', $oper))) {
+            $where = $where . "Between";
+        } elseif (array_search(strtolower("notin"), array_map('strtolower', $oper))) {
+            $where = $where . "NotIn";
+        } elseif (array_search(strtolower("in"), array_map('strtolower', $oper))) {
+            $where = $where . "In";
+        } elseif (array_search(strtolower("notnull"), array_map('strtolower', $oper))) {
+            $where = $where . "NotNull";
+        } elseif (array_search(strtolower("null"), array_map('strtolower', $oper))) {
+            $where = $where . "Null";
+        }
+
+        return $where;
     }
 
     protected function process_oper($value)
