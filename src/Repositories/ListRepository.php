@@ -135,6 +135,7 @@ abstract class ListRepository implements InterfaceListRepository
             }
         } else {
             Log::warning("Query Filter recibed with errors");
+            return $query;
         }
         return $query;
     }
